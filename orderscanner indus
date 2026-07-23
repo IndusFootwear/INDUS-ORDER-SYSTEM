@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Order Pad Scanner - Master Dealer Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen pb-12">
+    <div class="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
+
+        <!-- Header Banner with Prominent Dealer Name -->
+        <div class="bg-gradient-to-r from-indigo-950 via-slate-800 to-indigo-900 border border-slate-700 p-6 rounded-2xl shadow-2xl space-y-4">
+            
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-700/60 pb-4">
+                <div class="space-y-1 w-full lg:w-2/3">
+                    <div class="inline-flex items-center gap-2 bg-indigo-500/20 text-indigo-300 text-xs px-3 py-1 rounded-full font-semibold border border-indigo-500/30">
+                        <i class="fa-solid fa-store text-indigo-400"></i> Primary Dealer Focus
+                    </div>
+                    
+                    <!-- TOP DEALER NAME DISPLAY / OVERRIDE INPUT -->
+                    <div class="pt-2">
+                        <label class="block text-[11px] uppercase tracking-wider font-bold text-slate-400 mb-1">
+                            Dealer Name (Auto-Detected or Manual Override)
+                        </label>
+                        <div class="flex flex-col sm:flex-row gap-2 items-stretch">
+                            <div class="relative flex-1">
+                                <i class="fa-solid fa-building absolute left-3 top-3.5 text-indigo-400 text-sm"></i>
+                                <input type="text" id="topDealerInput" placeholder="e.g. VENUS ENTERPRISES / RIDDHI TRADERS" value="VENUS ENTERPRISES" class="w-full pl-9 pr-4 py-2.5 bg-slate-950/90 border border-indigo-500/50 rounded-xl text-lg font-black text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 tracking-wide shadow-inner">
+                            </div>
+                            <button onclick="applyTopDealerToAll()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2.5 rounded-xl shadow transition active:scale-95 text-xs flex items-center justify-center gap-2 whitespace-nowrap">
+                                <i class="fa-solid fa-check-double"></i>
+                                <span>Apply Dealer to All Rows</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-3 w-full lg:w-auto justify-start lg:justify-end">
+                    <button onclick="downloadExcel()" id="btnExcel" class="flex-1 lg:flex-none bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 px-5 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-file-excel text-lg"></i>
+                        <span>Export Excel (.xlsx)</span>
+                    </button>
+                    <button onclick="clearAll()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-3 px-4 rounded-xl shadow transition text-sm">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-slate-400 text-xs">
+                Upload order pad pages. The AI will extract the dealer name from each page header, split all multi-colors and arithmetic quantities, and structure everything ready for Excel export.
+            </p>
+        </div>
+
+        <!-- KPI Summary Cards with Dealer Card #1 -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-slate-800 p-4 rounded-xl shadow border border-slate-700">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Top Dealer Name</p>
+                <p class="text-base font-extrabold text-indigo-300 mt-1 truncate" id="kpiDealerName">VENUS ENTERPRISES</p>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl shadow border border-slate-700">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Scanned Pages</p>
+                <p class="text-xl font-black text-sky-400 mt-1" id="statFilesCount">0 Pages</p>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl shadow border border-slate-700">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Split Rows</p>
+                <p class="text-xl font-black text-slate-200 mt-1" id="statRowsCount">0 Rows</p>
+            </div>
+            <div class="bg-slate-800 p-4 rounded-xl shadow border border-slate-700">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Grand Total Quantity</p>
+                <p class="text-2xl font-black text-emerald-400 mt-1" id="statTotalQty">0 Pairs</p>
+            </div>
+        </div>
+
+        <!-- Upload & Settings Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Upload Box -->
+            <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-2xl p-6 flex flex-col justify-between space-y-4">
+                <div>
+                    <h2 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-images text-indigo-400"></i> Batch Upload Order Pad Pages
+                    </h2>
+                    <p class="text-xs text-slate-400 mb-4">Select 10, 20, or more handwritten photos at once.</p>
+                    
+                    <label for="imageInput" class="border-2 border-dashed border-indigo-500/40 hover:border-indigo-400 bg-slate-900/50 hover:bg-slate-900 transition rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer text-center group">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-400 group-hover:scale-110 transition mb-2"></i>
+                        <span class="text-sm font-semibold text-slate-200">Click or Drag & Drop Photos Here</span>
+                        <span class="text-[11px] text-slate-500 mt-0.5">Supports multi-selection of JPG, PNG, HEIC files</span>
+                        <input type="file" id="imageInput" multiple accept="image/*" class="hidden" onchange="handleFilesSelect(event)">
+                    </label>
+                </div>
+
+                <!-- Preview Thumbnail Strip -->
+                <div id="thumbContainer" class="flex flex-wrap gap-2 max-h-28 overflow-y-auto p-1 border-t border-slate-700/60 pt-3"></div>
+            </div>
+
+            <!-- AI Status & Actions -->
+            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 flex flex-col justify-between space-y-4">
+                <div>
+                    <h2 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-robot text-teal-400"></i> AI Extraction Engine
+                    </h2>
+                    <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-700 space-y-2.5 text-xs">
+                        <div class="flex justify-between text-slate-300">
+                            <span>Selected Photos:</span>
+                            <span id="badgeFileCount" class="font-bold text-indigo-400">0</span>
+                        </div>
+                        <div class="flex justify-between text-slate-300">
+                            <span>Status:</span>
+                            <span id="badgeStatus" class="font-bold text-slate-400">Idle</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <button onclick="startBatchScan()" id="btnStartScan" disabled class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Start Batch AI Extraction</span>
+                    </button>
+                    <div id="progressText" class="text-xs text-center text-slate-400 h-4 font-mono"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Extraction Results Table -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+            <div class="p-4 bg-slate-800/90 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-table-list text-emerald-400"></i> Extracted Orders Table
+                    </h2>
+                    <span id="visibleBadge" class="bg-slate-700 text-slate-300 text-xs px-2.5 py-0.5 rounded-full font-mono">0 rows</span>
+                </div>
+                <div class="w-full sm:w-64 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search dealer, article, color..." class="w-full pl-8 pr-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <div class="overflow-x-auto max-h-[550px]">
+                <table class="w-full text-left text-xs border-collapse" id="masterTable">
+                    <thead class="bg-slate-950 text-slate-300 sticky top-0 z-10 uppercase tracking-wider font-semibold border-b border-slate-700">
+                        <tr>
+                            <th class="py-3 px-4">Page No.</th>
+                            <th class="py-3 px-4">Dealer Name</th>
+                            <th class="py-3 px-4">Station</th>
+                            <th class="py-3 px-4">Article No.</th>
+                            <th class="py-3 px-4">Colour</th>
+                            <th class="py-3 px-4">Size</th>
+                            <th class="py-3 px-4 text-right">Qty</th>
+                            <th class="py-3 px-4 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-700/60 text-slate-300 font-medium">
+                        <tr id="emptyRow">
+                            <td colspan="8" class="text-center py-12 text-slate-500">
+                                <i class="fa-solid fa-folder-open text-3xl mb-2 block"></i>
+                                Upload photos above and click "Start Batch AI Extraction" to populate data.
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="bg-slate-950/90 font-bold text-slate-100 border-t border-slate-700 sticky bottom-0">
+                        <tr>
+                            <td colspan="6" class="py-3 px-4 text-right uppercase text-xs tracking-wider">Grand Total Quantity:</td>
+                            <td class="py-3 px-4 text-right text-sm text-emerald-400 font-black" id="footGrandTotal">0</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-indigo-600 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 z-50 flex items-center gap-2">
+        <i class="fa-solid fa-circle-info"></i> <span id="toastMsg">Notification</span>
+    </div>
+
+    <script>
+        const apiKey = "AQ.Ab8RN6KEdczoNX65QK5VmzsjmCZk2HilkiMGopJun59ZkAFjBA"; // Environment populates at runtime
+        let uploadedFiles = [];
+        let masterRows = [];
+
+        // Bind top dealer input to KPI card dynamically
+        document.getElementById('topDealerInput').addEventListener('input', function(e) {
+            const val = e.target.value.trim() || 'UNKNOWN DEALER';
+            document.getElementById('kpiDealerName').innerText = val;
+        });
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function applyTopDealerToAll() {
+            const dealer = document.getElementById('topDealerInput').value.trim();
+            if (!dealer) return;
+            if (masterRows.length === 0) {
+                showToast(`Dealer Name set to "${dealer}". Upload & scan photos to populate table.`);
+                return;
+            }
+            masterRows.forEach(row => { row.dealer = dealer; });
+            renderTable(masterRows);
+            showToast(`Updated Dealer Name to "${dealer}" for all ${masterRows.length} rows.`);
+        }
+
+        function handleFilesSelect(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            files.forEach(file => {
+                uploadedFiles.push({
+                    id: crypto.randomUUID(),
+                    file: file,
+                    status: 'pending'
+                });
+            });
+
+            renderThumbnails();
+            updateStats();
+            document.getElementById('btnStartScan').disabled = uploadedFiles.length === 0;
+            showToast(`Added ${files.length} photo(s). Ready to scan.`);
+        }
+
+        function renderThumbnails() {
+            const container = document.getElementById('thumbContainer');
+            container.innerHTML = '';
+            uploadedFiles.forEach((item, index) => {
+                const url = URL.createObjectURL(item.file);
+                const div = document.createElement('div');
+                div.className = "relative group w-16 h-16 rounded-lg overflow-hidden border border-slate-700 bg-slate-950 flex-shrink-0";
+                div.innerHTML = `
+                    <img src="${url}" class="w-full h-full object-cover">
+                    <span class="absolute bottom-0 inset-x-0 bg-slate-900/80 text-[10px] text-center text-slate-300 font-mono py-0.5">P${index + 1}</span>
+                    <button onclick="removeFile('${item.id}')" class="absolute top-0.5 right-0.5 bg-red-600/80 hover:bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function removeFile(id) {
+            uploadedFiles = uploadedFiles.filter(f => f.id !== id);
+            renderThumbnails();
+            updateStats();
+            document.getElementById('btnStartScan').disabled = uploadedFiles.length === 0;
+        }
+
+        function clearAll() {
+            uploadedFiles = [];
+            masterRows = [];
+            renderThumbnails();
+            renderTable(masterRows);
+            updateStats();
+            document.getElementById('btnStartScan').disabled = true;
+            document.getElementById('imageInput').value = '';
+            document.getElementById('badgeStatus').innerText = 'Idle';
+            document.getElementById('badgeStatus').className = 'font-bold text-slate-400';
+            showToast("Cleared all files and table data.");
+        }
+
+        function updateStats() {
+            document.getElementById('statFilesCount').innerText = `${uploadedFiles.length} Pages`;
+            document.getElementById('badgeFileCount').innerText = uploadedFiles.length;
+            document.getElementById('statRowsCount').innerText = `${masterRows.length} Rows`;
+            const total = masterRows.reduce((acc, r) => acc + (parseInt(r.qty, 10) || 0), 0);
+            document.getElementById('statTotalQty').innerText = `${total.toLocaleString()} Pairs`;
+            document.getElementById('footGrandTotal').innerText = total.toLocaleString();
+            document.getElementById('visibleBadge').innerText = `${masterRows.length} rows`;
+        }
+
+        async function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        async function fetchWithBackoff(url, options, retries = 5, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) return await response.json();
+                } catch (e) {
+                    if (i === retries - 1) throw e;
+                }
+                await new Promise(res => setTimeout(resolve, delay * Math.pow(2, i)));
+            }
+            throw new Error("Failed after retries");
+        }
+
+        async function processSinglePage(fileObj, pageIndex) {
+            const base64Data = await fileToBase64(fileObj.file);
+            const topDealer = document.getElementById('topDealerInput').value.trim();
+
+            const prompt = `You are an expert handwriting OCR engine for footwear order pads.
+Analyze this order form page and return a JSON object with:
+1. "pageNo": "Page ${pageIndex + 1}"
+2. "dealerName": extracted dealer name written at the top header of the pad. (If blank/unclear, use "${topDealer || 'VENUS ENTERPRISES'}")
+3. "station": extracted station or town name (or "")
+4. "items": array of item rows written on the sheet. Each item must contain:
+   - "article": article / model number
+   - "colour": list of colors (e.g., "Bk + Br + Tan" or "Bk/Red")
+   - "size": size string (e.g. "6x10", "8x10=3, 11x1=3", "5x8")
+   - "qty": raw quantity or formula (e.g., "5", "5+5+5", "3+3")`;
+
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [
+                        { text: prompt },
+                        { inlineData: { mimeType: fileObj.file.type || "image/png", data: base64Data } }
+                    ]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            pageNo: { type: "STRING" },
+                            dealerName: { type: "STRING" },
+                            station: { type: "STRING" },
+                            items: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        article: { type: "STRING" },
+                                        colour: { type: "STRING" },
+                                        size: { type: "STRING" },
+                                        qty: { type: "STRING" }
+                                    },
+                                    required: ["article", "colour", "size", "qty"]
+                                }
+                            }
+                        },
+                        required: ["pageNo", "dealerName", "items"]
+                    }
+                }
+            };
+
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const result = await fetchWithBackoff(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const contentText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!contentText) return [];
+
+            const parsed = JSON.parse(contentText);
+            const extracted = [];
+            const effectiveDealer = parsed.dealerName && parsed.dealerName !== "Unknown Dealer" ? parsed.dealerName : (topDealer || "VENUS ENTERPRISES");
+
+            // Update top header if first page detects a clean dealer name
+            if (pageIndex === 0 && parsed.dealerName) {
+                document.getElementById('topDealerInput').value = effectiveDealer;
+                document.getElementById('kpiDealerName').innerText = effectiveDealer;
+            }
+
+            (parsed.items || []).forEach(item => {
+                let qtyStr = (item.qty || "0").toString().replace(/=/g, '').trim();
+                let quants = qtyStr.split('+').map(q => q.trim()).filter(q => q && !isNaN(q));
+                let colors = (item.colour || "-").split('+').map(c => c.trim());
+
+                if (quants.length > 1 && colors.length > 1 && quants.length === colors.length) {
+                    quants.forEach((q, idx) => {
+                        extracted.push({
+                            id: crypto.randomUUID(),
+                            page: parsed.pageNo || `Page ${pageIndex + 1}`,
+                            dealer: effectiveDealer,
+                            station: parsed.station || "-",
+                            article: item.article || "-",
+                            colour: colors[idx] || item.colour,
+                            size: item.size || "-",
+                            qty: parseInt(q, 10) || 0
+                        });
+                    });
+                } else if (quants.length > 1) {
+                    quants.forEach(q => {
+                        extracted.push({
+                            id: crypto.randomUUID(),
+                            page: parsed.pageNo || `Page ${pageIndex + 1}`,
+                            dealer: effectiveDealer,
+                            station: parsed.station || "-",
+                            article: item.article || "-",
+                            colour: item.colour || "-",
+                            size: item.size || "-",
+                            qty: parseInt(q, 10) || 0
+                        });
+                    });
+                } else {
+                    extracted.push({
+                        id: crypto.randomUUID(),
+                        page: parsed.pageNo || `Page ${pageIndex + 1}`,
+                        dealer: effectiveDealer,
+                        station: parsed.station || "-",
+                        article: item.article || "-",
+                        colour: item.colour || "-",
+                        size: item.size || "-",
+                        qty: parseInt(qtyStr, 10) || 0
+                    });
+                }
+            });
+
+            return extracted;
+        }
+
+        async function startBatchScan() {
+            if (uploadedFiles.length === 0) return;
+
+            const btn = document.getElementById('btnStartScan');
+            const progress = document.getElementById('progressText');
+            const badgeStatus = document.getElementById('badgeStatus');
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing AI Batch...`;
+            badgeStatus.innerText = 'Scanning...';
+            badgeStatus.className = 'font-bold text-amber-400';
+
+            masterRows = [];
+            renderTable([]);
+
+            for (let i = 0; i < uploadedFiles.length; i++) {
+                progress.innerText = `Scanning page ${i + 1} of ${uploadedFiles.length}...`;
+                try {
+                    const rows = await processSinglePage(uploadedFiles[i], i);
+                    masterRows.push(...rows);
+                    renderTable(masterRows);
+                    updateStats();
+                } catch (err) {
+                    console.error("Extraction error on page", i + 1, err);
+                }
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-bolt"></i> Start Batch AI Extraction`;
+            progress.innerText = `Batch Extraction Completed!`;
+            badgeStatus.innerText = 'Completed';
+            badgeStatus.className = 'font-bold text-emerald-400';
+            showToast(`Extraction complete! Total ${masterRows.length} rows processed.`);
+        }
+
+        function renderTable(rows) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (rows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-12 text-slate-500">
+                            <i class="fa-solid fa-folder-open text-3xl mb-2 block"></i>
+                            No data extracted yet. Upload pages and start scan.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            rows.forEach((row) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-700/40 transition";
+                tr.innerHTML = `
+                    <td class="py-2.5 px-4 font-semibold text-indigo-400">${row.page}</td>
+                    <td class="py-2.5 px-4 text-slate-100 font-bold">${row.dealer}</td>
+                    <td class="py-2.5 px-4 text-slate-400">${row.station}</td>
+                    <td class="py-2.5 px-4 font-bold text-white">${row.article}</td>
+                    <td class="py-2.5 px-4"><span class="bg-indigo-950 text-indigo-300 border border-indigo-700/50 px-2 py-0.5 rounded font-mono text-[11px]">${row.colour}</span></td>
+                    <td class="py-2.5 px-4 text-slate-300">${row.size}</td>
+                    <td class="py-2.5 px-4 text-right font-bold text-emerald-400">${row.qty}</td>
+                    <td class="py-2.5 px-4 text-center">
+                        <button onclick="deleteRow('${row.id}')" class="text-slate-500 hover:text-red-400 transition p-1">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateStats();
+        }
+
+        function deleteRow(id) {
+            masterRows = masterRows.filter(r => r.id !== id);
+            renderTable(masterRows);
+            showToast("Row deleted.");
+        }
+
+        function filterTable() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = masterRows.filter(r => 
+                r.article.toLowerCase().includes(query) ||
+                r.colour.toLowerCase().includes(query) ||
+                r.dealer.toLowerCase().includes(query) ||
+                r.page.toLowerCase().includes(query)
+            );
+            renderTable(filtered);
+        }
+
+        function downloadExcel() {
+            if (masterRows.length === 0) {
+                showToast("No extracted data available to export.");
+                return;
+            }
+
+            const excelData = masterRows.map(r => ({
+                "PAGE NO.": r.page,
+                "DEALER NAME": r.dealer,
+                "STATION": r.station,
+                "ARTICLE NO.": r.article,
+                "COLOUR": r.colour,
+                "SIZE": r.size,
+                "QTY": r.qty
+            }));
+
+            const total = masterRows.reduce((acc, r) => acc + (parseInt(r.qty, 10) || 0), 0);
+            excelData.push({
+                "PAGE NO.": "",
+                "DEALER NAME": "",
+                "STATION": "",
+                "ARTICLE NO.": "",
+                "COLOUR": "",
+                "SIZE": "GRAND TOTAL",
+                "QTY": total
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            worksheet['!cols'] = [
+                { wch: 12 },
+                { wch: 25 },
+                { wch: 18 },
+                { wch: 18 },
+                { wch: 22 },
+                { wch: 16 },
+                { wch: 10 }
+            ];
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Master Orders");
+
+            const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const topDealerName = document.getElementById('topDealerInput').value.trim().replace(/[^a-zA-Z0-9]/g, '_') || 'Dealer';
+            a.download = `${topDealerName}_Extracted_Orders_${new Date().toISOString().slice(0,10)}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Excel spreadsheet downloaded successfully!");
+        }
+    </script>
+</body>
+</html>
+
+
