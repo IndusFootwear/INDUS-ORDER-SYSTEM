@@ -1238,7 +1238,9 @@ STRICT FIELD SEPARATION — "colour" and "qty" must never mix content: the "colo
 
 TICK MARKS / CHECKMARKS (✓) ARE NOT DIGITS: Some dealers mark a quantity number with a small tick or checkmark (often in red ink) to show it's been verified/counted. This tick is NOT part of the number and must NEVER be read as a "1", "2", part of the number's shape, or an extra addend — it is purely a verification mark and should be ignored completely when reading the quantity.
 
-CROSS-OUTS / CORRECTIONS: If a number is struck through and a different number is written next to or above it, use ONLY the corrected (final) number — the struck-through one was replaced and should not appear in your output at all.
+CROSS-OUTS / CORRECTIONS vs. VERIFICATION MARKS — these look similar but mean opposite things, read carefully:
+- TRUE CORRECTION: a number is struck through AND a different replacement number is clearly written next to or above it. In this case, use ONLY the new replacement number — the struck-through original was wrong and must not appear in your output at all.
+- VERIFICATION / DISPATCH MARK: a single diagonal line or slash drawn through a number with NO replacement number written anywhere nearby. This does NOT mean the number is wrong or cancelled — dealers commonly mark a quantity this way just to show that colour/item has already been dispatched or double-checked. The original number underneath is still correct and MUST be read and counted normally, exactly as if the mark wasn't there. Do not skip, reduce, or omit a number just because a line was drawn through it — only skip it if you can also see an actual different replacement number written in its place.
 
 DITTO MARKS (",", ",,", "-do-", "-||-", """, "11", "/ /", "Do"): 
 If you see ANY ditto mark or quotation mark signifying "same as above" in ANY column (Article, Colour, or Size), you MUST copy the exact value from the row immediately above it. Do NOT output the ditto mark itself.`;
