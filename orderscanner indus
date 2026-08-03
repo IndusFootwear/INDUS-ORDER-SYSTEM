@@ -706,6 +706,11 @@
                 colours.forEach((c, idx) => push(c, item.size, qtys[idx]));
             } else if (colours.length === 1 && sizes.length > 1 && sizes.length === qtys.length) {
                 sizes.forEach((s, idx) => push(item.colour, s, qtys[idx]));
+            } else if (colours.length === 1 && sizes.length > 1 && qtys.length === 1) {
+                // One quantity given but multiple sizes listed (e.g. "Mix",
+                // "5x8-6x8", "3") — repeat that same quantity for each size
+                // rather than leaving the sizes combined as one raw string.
+                sizes.forEach(s => push(item.colour, s, qtys[0]));
             } else if (qtys.length > 1 && colours.length > 1) {
                 const note = `${colours.length} colours vs ${qtys.length} qty numbers — kept combined, please check "${item.colour}" / "${item.qty}". If this pad uses month-wise dispatch quantities instead, switch Quantity Split Mode to "Month-wise".`;
                 push(item.colour, item.size, qtys.reduce((s, q) => s + (parseInt(q, 10) || 0), 0), null, note);
