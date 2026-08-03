@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Order Pad Scanner - Master Dealer Converter</title>
+    <title>AI Order Pad Scanner - Master Converter</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -11,7 +11,7 @@
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen pb-12">
     <div class="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
 
-        <!-- Header Banner with Prominent Dealer Name -->
+        <!-- Header Banner -->
         <div class="bg-gradient-to-r from-indigo-950 via-slate-800 to-indigo-900 border border-slate-700 p-6 rounded-2xl shadow-2xl space-y-4">
             
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-700/60 pb-4">
@@ -23,17 +23,11 @@
                     <!-- TOP DEALER NAME DISPLAY / OVERRIDE INPUT -->
                     <div class="pt-2">
                         <label class="block text-[11px] uppercase tracking-wider font-bold text-slate-400 mb-1">
-                            Dealer Name (Auto-Detected or Manual Override)
+                            Dealer Name / डीलर का नाम
                         </label>
-                        <div class="flex flex-col sm:flex-row gap-2 items-stretch">
-                            <div class="relative flex-1">
-                                <i class="fa-solid fa-building absolute left-3 top-3.5 text-indigo-400 text-sm"></i>
-                                <input type="text" id="topDealerInput" placeholder="e.g. VENUS ENTERPRISES / RIDDHI TRADERS" value="VENUS ENTERPRISES" class="w-full pl-9 pr-4 py-2.5 bg-slate-950/90 border border-indigo-500/50 rounded-xl text-lg font-black text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 tracking-wide shadow-inner">
-                            </div>
-                            <button onclick="applyTopDealerToAll()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2.5 rounded-xl shadow transition active:scale-95 text-xs flex items-center justify-center gap-2 whitespace-nowrap">
-                                <i class="fa-solid fa-check-double"></i>
-                                <span>Apply Dealer to All Rows</span>
-                            </button>
+                        <div class="relative">
+                            <i class="fa-solid fa-building absolute left-3 top-3.5 text-indigo-400 text-sm"></i>
+                            <input type="text" id="topDealerInput" placeholder="e.g. VENUS ENTERPRISES / RIDDHI TRADERS" value="VENUS ENTERPRISES" class="w-full pl-9 pr-4 py-2.5 bg-slate-950/90 border border-indigo-500/50 rounded-xl text-lg font-black text-white focus:outline-none focus:ring-2 focus:ring-indigo-400 tracking-wide shadow-inner">
                         </div>
                     </div>
                 </div>
@@ -41,7 +35,7 @@
                 <div class="flex flex-wrap gap-3 w-full lg:w-auto justify-start lg:justify-end">
                     <button onclick="downloadExcel()" id="btnExcel" class="flex-1 lg:flex-none bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 px-5 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-sm">
                         <i class="fa-solid fa-file-excel text-lg"></i>
-                        <span>Export Excel (.xlsx)</span>
+                        <span>Export Excel (.xlsx) / एक्सेल फाइल बनाएं</span>
                     </button>
                     <button onclick="clearAll()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-3 px-4 rounded-xl shadow transition text-sm">
                         <i class="fa-solid fa-rotate-left"></i>
@@ -49,78 +43,156 @@
                 </div>
             </div>
 
+            <!-- Gemini API Key Bar -->
+            <div class="bg-slate-950/80 border border-indigo-500/30 rounded-xl p-3 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-2 text-slate-300">
+                    <i class="fa-solid fa-key text-amber-400 text-sm"></i>
+                    <span class="font-bold">Gemini API Key:</span>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-2 flex-1 max-w-xl">
+                    <input type="password" id="apiKeyInput" placeholder="Paste AIzaSy... API Key here" class="flex-1 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                    <button onclick="saveApiKey()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-1.5 rounded-lg transition active:scale-95 flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Key
+                    </button>
+                </div>
+            </div>
+
             <p class="text-slate-400 text-xs">
-                Upload order pad pages. The AI will extract the dealer name from each page header, split all multi-colors and arithmetic quantities, and structure everything ready for Excel export.
+                Upload order pad pages. The AI automatically extracts article numbers, split colors, sizes, and quantities into a structured Excel sheet.
             </p>
         </div>
 
-        <!-- KPI Summary Cards with Dealer Card #1 -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div class="bg-slate-800 p-4 rounded-xl shadow border border-slate-700">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Top Dealer Name</p>
-                <p class="text-base font-extrabold text-indigo-300 mt-1 truncate" id="kpiDealerName">VENUS ENTERPRISES</p>
-            </div>
-            <div class="bg-slate-800 p-4 rounded-xl shadow border border-slate-700">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Scanned Pages</p>
-                <p class="text-xl font-black text-sky-400 mt-1" id="statFilesCount">0 Pages</p>
-            </div>
-            <div class="bg-slate-800 p-4 rounded-xl shadow border border-slate-700">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Split Rows</p>
-                <p class="text-xl font-black text-slate-200 mt-1" id="statRowsCount">0 Rows</p>
-            </div>
-            <div class="bg-slate-800 p-4 rounded-xl shadow border border-slate-700">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Grand Total Quantity</p>
-                <p class="text-2xl font-black text-emerald-400 mt-1" id="statTotalQty">0 Pairs</p>
+        <!-- Bilingual How-To-Use Guide -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+            <button onclick="toggleHowTo()" class="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-700/40 transition">
+                <span class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-circle-question text-emerald-400"></i>
+                    इस्तेमाल कैसे करें (How to Use)
+                </span>
+                <i id="howToChevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+            </button>
+            <div id="howToContent" class="hidden px-5 pb-5 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-300 border-t border-slate-700 pt-4">
+                <div>
+                    <div class="text-emerald-400 font-bold uppercase tracking-wide text-[10px] mb-2">English</div>
+                    <ol class="list-decimal list-inside space-y-1.5">
+                        <li>(Optional, recommended) Upload today's <b>Article List Excel/CSV</b> so colours and sizes get checked and auto-corrected against your real stock.</li>
+                        <li>Click <b>"Batch Upload Order Pad Pages"</b> and select all your photos at once — 10, 20, or more.</li>
+                        <li>Click <b>"Start Batch AI Extraction"</b> and wait — a table will fill in below automatically.</li>
+                        <li>Rows highlighted in orange need a quick manual check (unclear handwriting, article not in your list, etc.) — everything else is already corrected.</li>
+                        <li>Click <b>"Export Excel (.xlsx)"</b> — the file downloads and opens just like any normal Excel sheet.</li>
+                    </ol>
+                </div>
+                <div>
+                    <div class="text-emerald-400 font-bold uppercase tracking-wide text-[10px] mb-2">हिंदी</div>
+                    <ol class="list-decimal list-inside space-y-1.5">
+                        <li>(वैकल्पिक, पर सुझाया गया) आज की <b>आर्टिकल लिस्ट Excel/CSV</b> अपलोड करें — इससे रंग और साइज़ आपके असली स्टॉक के हिसाब से अपने आप ठीक हो जाएंगे।</li>
+                        <li><b>"Batch Upload Order Pad Pages"</b> पर क्लिक करें और अपनी सारी फोटो एक साथ चुनें — 10, 20 या उससे ज़्यादा भी चल जाएगा।</li>
+                        <li><b>"Start Batch AI Extraction"</b> पर क्लिक करें और थोड़ा इंतज़ार करें — नीचे टेबल अपने आप भर जाएगी।</li>
+                        <li>जिन लाइनों पर <span class="text-amber-400 font-semibold">नारंगी (orange)</span> निशान है, उन्हें एक बार खुद चेक कर लें (हैंडराइटिंग साफ़ नहीं थी, या आर्टिकल लिस्ट में नहीं मिला) — बाकी सब पहले से ठीक हो चुका है।</li>
+                        <li><b>"Export Excel (.xlsx)"</b> पर क्लिक करें — फाइल डाउनलोड होगी और आम Excel फाइल की तरह ही खुलेगी।</li>
+                    </ol>
+                </div>
             </div>
         </div>
 
-        <!-- Upload & Settings Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- Upload Box -->
-            <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-2xl p-6 flex flex-col justify-between space-y-4">
-                <div>
-                    <h2 class="text-base font-bold text-white mb-1 flex items-center gap-2">
-                        <i class="fa-solid fa-images text-indigo-400"></i> Batch Upload Order Pad Pages
-                    </h2>
-                    <p class="text-xs text-slate-400 mb-4">Select 10, 20, or more handwritten photos at once.</p>
-                    
-                    <label for="imageInput" class="border-2 border-dashed border-indigo-500/40 hover:border-indigo-400 bg-slate-900/50 hover:bg-slate-900 transition rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer text-center group">
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-400 group-hover:scale-110 transition mb-2"></i>
-                        <span class="text-sm font-semibold text-slate-200">Click or Drag & Drop Photos Here</span>
-                        <span class="text-[11px] text-slate-500 mt-0.5">Supports multi-selection of JPG, PNG, HEIC files</span>
-                        <input type="file" id="imageInput" multiple accept="image/*" class="hidden" onchange="handleFilesSelect(event)">
-                    </label>
-                </div>
-
-                <!-- Preview Thumbnail Strip -->
-                <div id="thumbContainer" class="flex flex-wrap gap-2 max-h-28 overflow-y-auto p-1 border-t border-slate-700/60 pt-3"></div>
+        <!-- Slim Stats Strip -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl px-5 py-3 flex flex-wrap gap-x-8 gap-y-2 items-center text-xs">
+            <div class="flex items-center gap-2">
+                <span class="text-slate-500 uppercase tracking-wide">Dealer / डीलर:</span>
+                <span class="font-bold text-indigo-300" id="kpiDealerName">VENUS ENTERPRISES</span>
             </div>
+            <div class="flex items-center gap-2">
+                <span class="text-slate-500 uppercase tracking-wide">Pages / पेज:</span>
+                <span class="font-bold text-sky-400" id="statFilesCount">0</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-slate-500 uppercase tracking-wide">Rows / लाइनें:</span>
+                <span class="font-bold text-slate-200" id="statRowsCount">0</span>
+            </div>
+            <div class="flex items-center gap-2 ml-auto">
+                <span class="text-slate-500 uppercase tracking-wide">Grand Total / कुल:</span>
+                <span class="font-black text-emerald-400 text-base" id="statTotalQty">0</span>
+            </div>
+        </div>
 
-            <!-- AI Status & Actions -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 flex flex-col justify-between space-y-4">
+        <!-- Upload + Scan (unified) -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6">
+            <label for="imageInput" class="border-2 border-dashed border-indigo-500/40 hover:border-indigo-400 bg-slate-900/50 hover:bg-slate-900 transition rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer text-center group">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-400 group-hover:scale-110 transition mb-2"></i>
+                <span class="text-sm font-semibold text-slate-200">Click or Drag & Drop Photos Here / फोटो यहाँ डालें</span>
+                <span class="text-[11px] text-slate-500 mt-0.5">10, 20, or more at once — JPG, PNG, HEIC</span>
+                <input type="file" id="imageInput" multiple accept="image/*" class="hidden" onchange="handleFilesSelect(event)">
+            </label>
+            <div id="thumbContainer" class="flex flex-wrap gap-2 max-h-24 overflow-y-auto p-1 mt-3"></div>
+
+            <div class="flex flex-col sm:flex-row gap-3 items-stretch mt-4">
+                <button onclick="startBatchScan()" id="btnStartScan" disabled class="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Start Scanning / स्कैन शुरू करें (<span id="badgeFileCount">0</span>)</span>
+                </button>
+                <span id="badgeStatus" class="self-center text-xs font-bold text-slate-400 whitespace-nowrap px-2">Idle</span>
+            </div>
+            <div id="progressText" class="text-[11px] text-center text-slate-400 font-mono min-h-[1.5rem] break-words px-2 mt-2"></div>
+        </div>
+
+        <!-- Advanced Settings (collapsed by default) -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
+            <button onclick="toggleSettings()" class="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-slate-700/40 transition">
+                <span class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-amber-400"></i>
+                    Settings / सेटिंग्स <span class="text-slate-500 font-normal text-xs">(Article List, Split Mode)</span>
+                </span>
+                <i id="settingsChevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+            </button>
+            <div id="settingsContent" class="hidden px-5 pb-5 space-y-5 border-t border-slate-700 pt-4">
+
+                <!-- Article List -->
                 <div>
-                    <h2 class="text-base font-bold text-white mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-robot text-teal-400"></i> AI Extraction Engine
-                    </h2>
-                    <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-700 space-y-2.5 text-xs">
-                        <div class="flex justify-between text-slate-300">
-                            <span>Selected Photos:</span>
-                            <span id="badgeFileCount" class="font-bold text-indigo-400">0</span>
-                        </div>
-                        <div class="flex justify-between text-slate-300">
-                            <span>Status:</span>
-                            <span id="badgeStatus" class="font-bold text-slate-400">Idle</span>
-                        </div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-list-check text-emerald-400"></i> Article List / आर्टिकल लिस्ट
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-3">
+                        Upload today's stock list (CSV/Excel — Article No., Colour, Size columns)
+                        any time it changes. Re-uploading fully replaces the old list. Unlisted
+                        articles or missing colours are flagged, never treated as an error.
+                        <br><span class="text-slate-500">जब भी लिस्ट बदले, दुबारा अपलोड करें — पुरानी अपने आप बदल जाएगी।</span>
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <label for="masterListInput" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl shadow transition active:scale-95 text-xs flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap">
+                            <i class="fa-solid fa-file-arrow-up"></i>
+                            <span>Upload Today's List / आज की लिस्ट</span>
+                        </label>
+                        <input type="file" id="masterListInput" accept=".csv,.xlsx,.xls" class="hidden" onchange="handleMasterListUpload(event)">
+                        <button onclick="rematchAllRows()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium px-4 py-2 rounded-xl shadow transition text-xs flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-rotate"></i> Re-check All Rows / फिर से जांचें
+                        </button>
+                    </div>
+                    <div id="masterListStatus" class="text-xs text-slate-400 bg-slate-900/60 rounded-lg px-3 py-2 border border-slate-700 mt-2">
+                        No article list loaded yet. / अभी कोई लिस्ट अपलोड नहीं है।
                     </div>
                 </div>
 
-                <div class="space-y-3">
-                    <button onclick="startBatchScan()" id="btnStartScan" disabled class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-sm">
-                        <i class="fa-solid fa-bolt"></i>
-                        <span>Start Batch AI Extraction</span>
-                    </button>
-                    <div id="progressText" class="text-xs text-center text-slate-400 h-4 font-mono"></div>
+                <!-- Split Mode -->
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-shuffle text-amber-400"></i> Quantity Split Mode
+                    </h3>
+                    <p class="text-xs text-slate-400 mb-3">
+                        Multiple numbers on one line can mean "one per colour/size" or "one per
+                        dispatch month" — pick which this pad uses, or leave on Auto-detect.
+                    </p>
+                    <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                        <select id="splitModeSelect" onchange="onSplitModeChange()" class="px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                            <option value="auto">Auto-detect from image (default)</option>
+                            <option value="colour">Colour/Size-wise</option>
+                            <option value="month">Month-wise (dispatch schedule)</option>
+                        </select>
+                        <div id="monthLabelsRow" class="hidden flex-1 flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                            <label class="text-xs text-slate-400 whitespace-nowrap">Month labels:</label>
+                            <input type="text" id="monthLabelsInput" value="July,August,September" placeholder="e.g. July,August,September" class="flex-1 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -140,12 +212,35 @@
                 </div>
             </div>
 
+            <!-- Find & Replace Bar -->
+            <div class="p-3 bg-slate-900/60 border-b border-slate-700 flex flex-col md:flex-row gap-2 items-stretch md:items-center text-xs">
+                <div class="flex items-center gap-1.5 text-slate-400 font-semibold whitespace-nowrap">
+                    <i class="fa-solid fa-arrow-right-arrow-left text-amber-400"></i> Find &amp; Replace:
+                </div>
+                <select id="frField" class="px-2 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                    <option value="all">All fields</option>
+                    <option value="article">Article No.</option>
+                    <option value="colour">Colour</option>
+                    <option value="size">Size</option>
+                    <option value="station">Station</option>
+                </select>
+                <input type="text" id="frFind" placeholder="Find (e.g. wrong text)" class="flex-1 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                <i class="fa-solid fa-arrow-right text-slate-500 hidden md:block self-center"></i>
+                <input type="text" id="frReplace" placeholder="Replace with" class="flex-1 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                <label class="flex items-center gap-1.5 text-slate-400 whitespace-nowrap px-1">
+                    <input type="checkbox" id="frExact" class="accent-indigo-500"> Exact match only
+                </label>
+                <button onclick="findReplaceAll()" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-1.5 rounded-lg transition active:scale-95 whitespace-nowrap">
+                    <i class="fa-solid fa-check-double"></i> Replace All
+                </button>
+            </div>
+
             <div class="overflow-x-auto max-h-[550px]">
                 <table class="w-full text-left text-xs border-collapse" id="masterTable">
                     <thead class="bg-slate-950 text-slate-300 sticky top-0 z-10 uppercase tracking-wider font-semibold border-b border-slate-700">
                         <tr>
                             <th class="py-3 px-4">Page No.</th>
-                            <th class="py-3 px-4">Dealer Name</th>
+                            <th class="py-3 px-4">Month</th>
                             <th class="py-3 px-4">Station</th>
                             <th class="py-3 px-4">Article No.</th>
                             <th class="py-3 px-4">Colour</th>
@@ -175,20 +270,97 @@
 
     </div>
 
+    <!-- Hidden Canvas for Image Resizing & Compression -->
+    <canvas id="conversionCanvas" class="hidden"></canvas>
+
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 right-5 bg-indigo-600 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 z-50 flex items-center gap-2">
         <i class="fa-solid fa-circle-info"></i> <span id="toastMsg">Notification</span>
     </div>
 
     <script>
-        const apiKey = "AQ.Ab8RN6KEdczoNX65QK5VmzsjmCZk2HilkiMGopJun59ZkAFjBA"; // Environment populates at runtime
+        const apiKey = ""; // System populates at runtime or fallback to UI input
+        let userApiKey = "";
         let uploadedFiles = [];
         let masterRows = [];
+        let masterIndex = null; // Map: normalizedArticle -> { original, colours: Set, sizes: Set }
 
-        // Bind top dealer input to KPI card dynamically
+        function onSplitModeChange() {
+            const mode = document.getElementById('splitModeSelect').value;
+            document.getElementById('monthLabelsRow').classList.toggle('hidden', mode !== 'month');
+        }
+
+        function getSplitMode() {
+            return document.getElementById('splitModeSelect').value; // 'auto' | 'colour' | 'month'
+        }
+
+        function getMonthLabels() {
+            return document.getElementById('monthLabelsInput').value
+                .split(',').map(s => s.trim()).filter(Boolean);
+        }
+
+        // Updated July 2026: Gemini 1.0, 1.5, and 2.0 models are all
+        // retired (404 on every call). Current generation is Gemini 3.x.
+        const MODEL_SEQUENCE = [
+            "gemini-flash-latest",
+            "gemini-3.5-flash",
+            "gemini-3.1-flash-lite"
+        ];
+
+        window.onload = function() {
+            const storedKey = localStorage.getItem('gemini_ocr_api_key');
+            if (storedKey) {
+                userApiKey = storedKey;
+                document.getElementById('apiKeyInput').value = storedKey;
+            }
+        };
+
+        function getActiveApiKey() {
+            return apiKey || userApiKey || document.getElementById('apiKeyInput').value.trim();
+        }
+
+        function saveApiKey() {
+            const keyVal = document.getElementById('apiKeyInput').value.trim();
+            if (!keyVal) {
+                showToast("Please enter a valid API key.");
+                return;
+            }
+            userApiKey = keyVal;
+            localStorage.setItem('gemini_ocr_api_key', keyVal);
+            showToast("Gemini API key saved successfully!");
+        }
+
         document.getElementById('topDealerInput').addEventListener('input', function(e) {
             const val = e.target.value.trim() || 'UNKNOWN DEALER';
             document.getElementById('kpiDealerName').innerText = val;
+        });
+
+        function toggleHowTo() {
+            const content = document.getElementById('howToContent');
+            const chevron = document.getElementById('howToChevron');
+            content.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        function toggleSettings() {
+            const content = document.getElementById('settingsContent');
+            const chevron = document.getElementById('settingsChevron');
+            content.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        function toggleRowFlag(event, rowId) {
+            event.stopPropagation();
+            const box = document.getElementById(`flagbox-${rowId}`);
+            if (!box) return;
+            const isHidden = box.classList.contains('hidden');
+            // Close any other open flag boxes first
+            document.querySelectorAll('[id^="flagbox-"]').forEach(el => el.classList.add('hidden'));
+            if (isHidden) box.classList.remove('hidden');
+        }
+        // Close an open flag dropdown when clicking anywhere else on the page
+        document.addEventListener('click', () => {
+            document.querySelectorAll('[id^="flagbox-"]').forEach(el => el.classList.add('hidden'));
         });
 
         function showToast(msg) {
@@ -197,19 +369,7 @@
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
-        }
-
-        function applyTopDealerToAll() {
-            const dealer = document.getElementById('topDealerInput').value.trim();
-            if (!dealer) return;
-            if (masterRows.length === 0) {
-                showToast(`Dealer Name set to "${dealer}". Upload & scan photos to populate table.`);
-                return;
-            }
-            masterRows.forEach(row => { row.dealer = dealer; });
-            renderTable(masterRows);
-            showToast(`Updated Dealer Name to "${dealer}" for all ${masterRows.length} rows.`);
+            }, 3500);
         }
 
         function handleFilesSelect(event) {
@@ -265,6 +425,7 @@
             document.getElementById('imageInput').value = '';
             document.getElementById('badgeStatus').innerText = 'Idle';
             document.getElementById('badgeStatus').className = 'font-bold text-slate-400';
+            document.getElementById('progressText').innerHTML = '';
             showToast("Cleared all files and table data.");
         }
 
@@ -278,49 +439,811 @@
             document.getElementById('visibleBadge').innerText = `${masterRows.length} rows`;
         }
 
-        async function fileToBase64(file) {
+        // AGGRESSIVE COMPRESSION: Resizes images heavily to ensure payload is tiny and won't trigger network timeouts.
+        async function fileToNormalizedBase64(file) {
             return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = error => reject(error);
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.onload = () => {
+                    const canvas = document.getElementById('conversionCanvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Force max dimension to 800px to keep payload size extremely small (< 100kb usually)
+                    const maxDim = 800; 
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > maxDim || height > maxDim) {
+                        if (width > height) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        } else {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    URL.revokeObjectURL(url);
+                    
+                    // Compress JPEG heavily to 0.6 quality
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                    resolve(dataUrl.split(',')[1]);
+                };
+                img.onerror = (err) => {
+                    URL.revokeObjectURL(url);
+                    reject(new Error("Failed to read or decode image file."));
+                };
+                img.src = url;
             });
         }
 
-        async function fetchWithBackoff(url, options, retries = 5, delay = 1000) {
-            for (let i = 0; i < retries; i++) {
+        async function callGeminiApiWithFallback(payload, key) {
+            let lastError = null;
+
+            for (const modelName of MODEL_SEQUENCE) {
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
+                
                 try {
-                    const response = await fetch(url, options);
-                    if (response.ok) return await response.json();
-                } catch (e) {
-                    if (i === retries - 1) throw e;
+                    const response = await fetch(endpoint, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        return await response.json();
+                    }
+
+                    const errJson = await response.json().catch(() => ({}));
+                    const errMsg = errJson.error?.message || `HTTP ${response.status} ${response.statusText}`;
+
+                    // Skip immediately to the next model if this one is not found or not supported
+                    if (response.status === 404 || errMsg.toLowerCase().includes('not found') || errMsg.toLowerCase().includes('not supported')) {
+                        console.warn(`Model ${modelName} not available, trying next...`);
+                        lastError = new Error(`Model ${modelName} unavailable.`);
+                        continue; 
+                    }
+
+                    // If it's a key/auth error, throw immediately so user can fix it
+                    if (response.status === 403 || response.status === 400) {
+                        throw new Error(`API Error (${response.status}): ${errMsg}`);
+                    }
+
+                    throw new Error(`HTTP Error ${response.status}: ${errMsg}`);
+
+                } catch (err) {
+                    lastError = err;
+                    if (err.message.includes('API Error')) {
+                        throw err; // Stop sequence on bad key
+                    }
+                    console.warn(`Fetch failed for ${modelName}:`, err.message);
                 }
-                await new Promise(res => setTimeout(resolve, delay * Math.pow(2, i)));
             }
-            throw new Error("Failed after retries");
+
+            throw new Error(`All models failed. Last error: ${lastError ? lastError.message : 'Unknown network issue'}`);
+        }
+
+        // ---- Colour / size / qty tokenizers, ported from the claude.ai tool ----
+
+        // Colours can be joined by "+", separated by plain spaces, or written
+        // as slash-joined two-tone pairs ("BK/BRN" = one combo colour, not
+        // two). A lone "/" only acts as a SEPARATOR between two colours when
+        // it sits between two chunks that already contain their own slash
+        // (e.g. "BK/Yellow / BK/P.Grn" -> two pairs); otherwise a lone "/"
+        // between two plain words gets re-glued into one two-tone colour.
+        function colourTokens(valRaw) {
+            if (!valRaw) return [];
+            const majorParts = String(valRaw).split(/[+,]+/).map(p => p.trim()).filter(Boolean);
+            const result = [];
+            majorParts.forEach(part => {
+                const rawTokens = part.split(/\s+/).filter(Boolean);
+                let i = 0;
+                while (i < rawTokens.length) {
+                    const tok = rawTokens[i];
+                    if (tok === "/") {
+                        const prev = result[result.length - 1];
+                        const next = rawTokens[i + 1];
+                        if (prev && next && !prev.includes("/") && !next.includes("/")) {
+                            result[result.length - 1] = prev + "/" + next;
+                            i += 2;
+                            continue;
+                        } else {
+                            i += 1;
+                            continue;
+                        }
+                    } else {
+                        const cleaned = tok.replace(/^-+|-+$/g, "").trim();
+                        if (cleaned) result.push(cleaned);
+                        i += 1;
+                    }
+                }
+            });
+            // Defensive cleanup: a stray quantity digit can sometimes leak
+            // into the colour text on messy handwritten lines (numbers and
+            // colour notes written close together/overlapping). A token
+            // that's ENTIRELY digits is never a real colour name, so drop it.
+            return result.filter(c => c && c !== "/" && c !== "-" && !/^\d+$/.test(c));
+        }
+
+        // Alternate tokenizer: treats "/" as ALWAYS a hard separator, same as
+        // "+" or ",". Some dealers (not all) write individual colours
+        // separated by "/" rather than using it to mean a two-tone combo —
+        // e.g. "BLUE/Red, BK/Rd" meaning three separate colours (Blue, Red,
+        // Black), not two two-tone pairs. There's no way to know which
+        // convention a given line uses just from the punctuation, so this
+        // is used as a fallback that gets picked only when it actually
+        // produces a token count matching the known quantity count.
+        function colourTokensStrict(valRaw) {
+            if (!valRaw) return [];
+            return String(valRaw).split(/[\s+,\/]+/)
+                .map(c => c.replace(/^-+|-+$/g, "").trim())
+                .filter(Boolean);
+        }
+
+        // Picks whichever colour tokenization actually matches the known
+        // number of quantities — the qty count is ground truth (it's just
+        // numbers, nothing ambiguous about it), so let it decide whether
+        // "/" meant "two-tone combo" or "separate colour" for this line.
+        function resolveColourTokens(valRaw, expectedCount) {
+            const glued = colourTokens(valRaw);
+            if (glued.length === expectedCount) return glued;
+            const strict = colourTokensStrict(valRaw);
+            if (strict.length === expectedCount) return strict;
+            return glued; // neither matches — default to the glued interpretation
+        }
+
+        // Sizes are sometimes listed together too ("6x9 7x10 8x10", or
+        // "5x8-6x8" with a dash instead of a space) when one row covers
+        // several sizes for a single colour. The dash here is a separator
+        // between two size codes, NOT part of either size — "5x8-6x8" means
+        // two sizes, "5x8" and "6x8", never one combined size value.
+        function sizeTokens(val) {
+            if (!val) return [];
+            return String(val).split(/[\s,\-]+/).map(s => s.trim()).filter(Boolean);
+        }
+
+        // Splits the individual addend numbers out of a qty string like
+        // "2+5+5=12" -> ["2","5","5"], ignoring the "=12" summary. Also
+        // handles a different dealer convention: "2+2+2 -6" (space+dash
+        // instead of "="), which is their own running total written to the
+        // side, not a 4th addend — stripped the same way. Never returns just
+        // the total — the addends are what let us split rows.
+        function qtyAddends(val) {
+            if (!val) return [];
+            let withoutTotal = String(val).split("=")[0];
+            // Strip a trailing "-N" dealer total (e.g. "2+2+2 -6") — a dash
+            // followed by digits at the very end, separate from the "+" chain.
+            withoutTotal = withoutTotal.replace(/\s*-\s*\d+\s*$/, "");
+            const rawTokens = withoutTotal.split(/[\s+,]+/).map(s => s.trim()).filter(Boolean);
+            // Defensive cleanup: a colour abbreviation or tick-mark letter can
+            // sometimes leak into the qty string on messy handwritten lines.
+            // Strip any non-digit characters from each token; if nothing
+            // numeric is left, drop that token entirely rather than treating
+            // stray letters as part of a quantity.
+            return rawTokens
+                .map(t => t.replace(/[^\d]/g, ""))
+                .filter(t => t.length > 0);
+        }
+
+        // Splits one extracted item into one-or-more final rows. Two modes:
+        //
+        // MONTH-WISE: the numbers mean "same colour/size, one qty per
+        // dispatch month" (July/Aug/Sep...). Colour and size are NOT split
+        // at all — they repeat unchanged on every row, only the qty and a
+        // new "month" label change per row, using the operator-provided (or
+        // image-detected) month label list in order.
+        //
+        // COLOUR/SIZE-WISE (default "auto" also falls back here unless a
+        // page's own detected month headers say otherwise): existing
+        // patterns —
+        // (A) multiple colours + matching qty count + sizes ALSO match count
+        //     -> zip colour, size, and qty together by position.
+        // (A2) multiple colours + matching qty count, size doesn't also
+        //     match -> zip colour+qty, size stays as originally written.
+        // (B) one colour + multiple sizes + matching qty count -> zip
+        //     size+qty, same colour on every row.
+        // (C) qty numbers with nothing to pair against (single colour,
+        //     single size) -> still split into separate rows with the SAME
+        //     colour/size repeated, never summed into one total.
+        // Anything else with a genuine count mismatch gets flagged instead
+        // of guessed at.
+        function splitItem(item, pageLabel, dealer, station, mode, monthLabels, detectedMonthLabels) {
+            const sizes = sizeTokens(item.size);
+            const qtys = qtyAddends(item.qty);
+            const out = [];
+            const groupId = crypto.randomUUID(); // shared by every row split from this one original line
+
+            const push = (colour, size, qty, month, note) => out.push({
+                id: crypto.randomUUID(),
+                groupId,
+                page: pageLabel,
+                dealer, station,
+                article: item.article || "-",
+                colour: colour || item.colour || "-",
+                size: size || item.size || "-",
+                qty: parseInt(qty, 10) || 0,
+                month: month || "",
+                splitFlagReasons: note ? [note] : [],
+                masterFlagReasons: []
+            });
+
+            // Decide effective mode: explicit selection wins; "auto" uses
+            // image-detected month headers if the scan found any, else
+            // falls back to colour/size-wise.
+            const effectiveMode = mode === 'auto'
+                ? (detectedMonthLabels && detectedMonthLabels.length > 0 ? 'month' : 'colour')
+                : mode;
+
+            if (effectiveMode === 'month' && qtys.length > 1) {
+                const labels = (mode === 'auto' && detectedMonthLabels && detectedMonthLabels.length > 0)
+                    ? detectedMonthLabels
+                    : monthLabels;
+                qtys.forEach((q, idx) => {
+                    const monthLabel = labels[idx] || `Month ${idx + 1}`;
+                    push(item.colour, item.size, q, monthLabel);
+                });
+                return out;
+            }
+
+            const colours = resolveColourTokens(item.colour, qtys.length);
+
+            if (colours.length > 1 && colours.length === qtys.length && sizes.length === qtys.length) {
+                colours.forEach((c, idx) => push(c, sizes[idx], qtys[idx]));
+            } else if (colours.length > 1 && colours.length === qtys.length && sizes.length > 1) {
+                // Colours match the qty count, and there are multiple sizes
+                // too, but the size count DOESN'T also match qty count — e.g.
+                // 3 colours + 2 sizes ("5x8-6x8") + 3 quantities. Each colour's
+                // number applies to EVERY size (not divided between them):
+                // Black=3, Brown=3, Tan=3, each written out for both 5x8 AND
+                // 6x8 — 3 colours × 2 sizes = 6 rows total.
+                colours.forEach((c, idx) => {
+                    sizes.forEach(s => push(c, s, qtys[idx]));
+                });
+            } else if (colours.length > 1 && colours.length === qtys.length) {
+                colours.forEach((c, idx) => push(c, item.size, qtys[idx]));
+            } else if (colours.length === 1 && sizes.length > 1 && sizes.length === qtys.length) {
+                sizes.forEach((s, idx) => push(item.colour, s, qtys[idx]));
+            } else if (qtys.length > 1 && colours.length > 1) {
+                const note = `${colours.length} colours vs ${qtys.length} qty numbers — kept combined, please check "${item.colour}" / "${item.qty}". If this pad uses month-wise dispatch quantities instead, switch Quantity Split Mode to "Month-wise".`;
+                push(item.colour, item.size, qtys.reduce((s, q) => s + (parseInt(q, 10) || 0), 0), null, note);
+            } else if (qtys.length > 1) {
+                // Nothing to pair against (single colour, single size) — still
+                // split into separate rows, e.g. "3+2=5" -> two rows of 3 and 2.
+                qtys.forEach(q => push(item.colour, item.size, q));
+            } else {
+                push(item.colour, item.size, item.qty);
+            }
+
+            return out;
+        }
+
+        // ---- Master Article List: upload, indexing, and auto-correction ----
+
+        // Standard Levenshtein edit distance — counts how many single-character
+        // insertions/deletions/substitutions turn one string into the other.
+        // Used to catch handwriting misreads like "IG-1005" vs "JG-1005"
+        // (distance 1) or "6999-04" vs "6939-04" (distance 1).
+        function levenshtein(a, b) {
+            const m = a.length, n = b.length;
+            if (m === 0) return n;
+            if (n === 0) return m;
+            const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+            for (let i = 0; i <= m; i++) dp[i][0] = i;
+            for (let j = 0; j <= n; j++) dp[0][j] = j;
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                    dp[i][j] = Math.min(
+                        dp[i - 1][j] + 1,
+                        dp[i][j - 1] + 1,
+                        dp[i - 1][j - 1] + cost
+                    );
+                }
+            }
+            return dp[m][n];
+        }
+
+        // Strips everything except letters/digits and uppercases, so "JG-1005",
+        // "jg 1005", and "JG_1005" all compare as the same underlying code.
+        function normalizeCode(s) {
+            return String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+        }
+
+        // How many edits we'll tolerate before refusing to call it a match —
+        // scales with length so short codes aren't matched too loosely.
+        function maxAllowedDistance(len) {
+            if (len <= 4) return 1;
+            if (len <= 8) return 2;
+            return Math.max(2, Math.floor(len * 0.2));
+        }
+
+        function parseMasterListFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const wb = XLSX.read(data, { type: "array" });
+                        const sheet = wb.Sheets[wb.SheetNames[0]];
+                        // Raw array-of-arrays, not object-mode — needed because
+                        // this kind of catalog often has ONE header cell
+                        // ("COLOUR") followed by several blank-header columns
+                        // that all belong to it (wide format).
+                        const aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", raw: true });
+                        resolve(aoa);
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                reader.onerror = () => reject(new Error("Could not read the file."));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Finds the column index of the first header cell that matches one
+        // of the candidate labels (case-insensitive, punctuation-insensitive).
+        function findHeaderColIndex(headerRow, candidates) {
+            for (let i = 0; i < headerRow.length; i++) {
+                const cell = String(headerRow[i] || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+                if (candidates.includes(cell)) return i;
+            }
+            return -1;
+        }
+
+        async function handleMasterListUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('masterListStatus');
+            statusEl.innerText = "Reading article list...";
+
+            try {
+                const aoa = await parseMasterListFile(file);
+                if (!aoa.length) throw new Error("File appears to be empty.");
+
+                const headerRow = aoa[0];
+                const articleIdx = findHeaderColIndex(headerRow, ["articleno", "article", "articlenumber", "model", "modelno"]);
+                const colourIdx = findHeaderColIndex(headerRow, ["colour", "color", "colours", "colors"]);
+                const sizeIdx = findHeaderColIndex(headerRow, ["size", "sizes"]);
+
+                if (articleIdx === -1) {
+                    throw new Error(`Couldn't find an Article No. column. Found headers: ${headerRow.filter(Boolean).join(", ")}`);
+                }
+
+                // Figure out the column ranges each label actually covers.
+                // If there's a gap of more than 1 column between the COLOUR
+                // header and the next label (SIZE, or end of sheet), this is
+                // a "wide" catalog — several colour slots for one article on
+                // one row — so we sweep that whole range. Otherwise it's a
+                // simple one-value-per-row layout.
+                const totalCols = Math.max(...aoa.map(r => r.length));
+                const colourEndIdx = (sizeIdx !== -1 && sizeIdx > colourIdx) ? sizeIdx - 1 : (colourIdx !== -1 ? colourIdx : -1);
+                const sizeEndIdx = sizeIdx !== -1 ? totalCols - 1 : -1;
+
+                const index = new Map();
+                for (let r = 1; r < aoa.length; r++) {
+                    const row = aoa[r];
+                    const rawArticle = String(row[articleIdx] ?? "").trim();
+                    if (!rawArticle) continue;
+                    const key = normalizeCode(rawArticle);
+                    if (!index.has(key)) {
+                        index.set(key, { original: rawArticle, colours: new Set(), sizes: new Set() });
+                    }
+                    const entry = index.get(key);
+
+                    if (colourIdx !== -1) {
+                        for (let c = colourIdx; c <= colourEndIdx; c++) {
+                            const val = String(row[c] ?? "").trim();
+                            if (val) entry.colours.add(val);
+                        }
+                    }
+                    if (sizeIdx !== -1) {
+                        for (let c = sizeIdx; c <= sizeEndIdx; c++) {
+                            const val = String(row[c] ?? "").trim();
+                            if (val) entry.sizes.add(val);
+                        }
+                    }
+                }
+
+                masterIndex = index;
+                const now = new Date();
+                const timeStr = now.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> Loaded <b>${index.size}</b> articles from "${file.name}" — updated ${timeStr}. New scans will now auto-correct against this list. / <span class="text-slate-500">${index.size} आर्टिकल लोड हो गए, अभी की लिस्ट इस्तेमाल हो रही है।</span>`;
+                showToast(`Article list loaded: ${index.size} articles.`);
+
+                if (masterRows.length > 0) {
+                    rematchAllRows();
+                }
+            } catch (err) {
+                statusEl.innerHTML = `<span class="text-red-400"><i class="fa-solid fa-circle-exclamation"></i> Error reading file: ${err.message}</span>`;
+                showToast("Couldn't read that article list file.");
+            }
+        }
+
+        // Looks up the closest matching article in the master list. Returns
+        // null if nothing is close enough to trust.
+        //
+        // SAFETY RULE: fuzzy (edit-distance) matching is only applied to
+        // codes that contain letters — that's the domain-appropriate case
+        // for handwriting misreads (I/J, O/E, etc). A PURELY NUMERIC code
+        // requires an exact match. Fuzzy-matching numeric codes is
+        // dangerous: "3362" sitting 1 digit away from "33602" isn't a typo,
+        // it's very likely two different real products, and silently
+        // reassigning one to the other risks shipping the wrong item.
+        function matchArticleAgainstMaster(scannedArticle) {
+            if (!masterIndex || masterIndex.size === 0) return null;
+            const key = normalizeCode(scannedArticle);
+            if (!key) return null;
+
+            // Exact match first
+            if (masterIndex.has(key)) return masterIndex.get(key);
+
+            const isPurelyNumeric = /^[0-9]+$/.test(key);
+            if (isPurelyNumeric) return null; // no exact match = not found, full stop
+
+            // Fuzzy match (letters present): find the closest key within the allowed distance
+            let best = null;
+            let bestDist = Infinity;
+            for (const [candKey, entry] of masterIndex.entries()) {
+                const dist = levenshtein(key, candKey);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = entry;
+                }
+            }
+            if (best && bestDist <= maxAllowedDistance(key.length)) {
+                return best;
+            }
+            return null;
+        }
+
+        // Colour short-forms — a mix of ones confirmed on real order forms
+        // (BK, BRN, MHD, DK, DRN...) and general footwear/fashion industry
+        // shorthand conventions applied by the same logic (first letters,
+        // dropped vowels, common trade abbreviations), so the dictionary
+        // covers shorthand beyond only what's been manually corrected so far.
+        // Keys are checked case-insensitively.
+        const COLOR_ABBREV = {
+            // Black
+            "BK": "BLACK", "DK": "BLACK", "BLK": "BLACK",
+            // Brown
+            "BR": "BROWN", "BRN": "BROWN", "DRN": "BROWN", "BRW": "BROWN",
+            // Tan / Beige
+            "TAN": "TAN",
+            "BG": "BEIGE", "DG": "BEIGE", "BEG": "BEIGE",
+            // White
+            "WT": "WHITE", "WHT": "WHITE", "WHI": "WHITE",
+            // Red
+            "RD": "RED", "RED": "RED",
+            // Grey
+            "GRY": "GREY", "GREY": "GREY", "GRE": "GREY", "GRAY": "GREY",
+            "D.GRY": "DARK GREY", "DGRY": "DARK GREY",
+            "L.GRY": "LIGHT GREY", "LGRY": "LIGHT GREY",
+            "S.GRY": "STEEL GREY",
+            "STL": "STEEL", "STL-GRY": "STEEL GREY",
+            // Blue
+            "BL": "BLUE", "BLU": "BLUE", "BLUE": "BLUE",
+            "N.BL": "NAVY BLUE", "N.B": "NAVY BLUE", "NVY": "NAVY BLUE", "NAVY": "NAVY BLUE",
+            "SKY": "SKY BLUE", "S.BL": "SKY BLUE",
+            "TRQ": "TURQUOISE",
+            // Peach / Pink / Purple / Magenta
+            "PCH": "PEACH",
+            "PNK": "PINK", "PINK": "PINK",
+            "PUR": "PURPLE", "PRPL": "PURPLE", "PURPLE": "PURPLE",
+            "MGN": "MAGENTA", "MAGENTA": "MAGENTA",
+            "LAV": "LAVENDER",
+            // Cherry / Maroon / Wine / Rust
+            "CHR": "CHERRY", "CHRY": "CHERRY", "CHRP": "CHERRY",
+            "MRN": "MAROON", "MAROON": "MAROON",
+            "WNE": "WINE", "WINE": "WINE",
+            "RST": "RUST", "RUST": "RUST",
+            "CRL": "CORAL", "CORAL": "CORAL",
+            // Green
+            "GRN": "GREEN", "GRE": "GREEN", "GREEN": "GREEN",
+            "P.GRN": "PISTA GREEN", "PISTA": "PISTA GREEN",
+            "OLV": "OLIVE", "OLIVE": "OLIVE",
+            "MNT": "MINT", "MINT": "MINT",
+            // Yellow / Orange / Gold / Mustard
+            "YLW": "YELLOW", "YEL": "YELLOW", "YELLOW": "YELLOW",
+            "OR": "ORANGE", "ORG": "ORANGE", "ORANGE": "ORANGE",
+            "GLD": "GOLD", "GOLD": "GOLD", "R.GOLD": "ROSE GOLD", "RGD": "ROSE GOLD",
+            "MST": "MUSTARD", "MUSTARD": "MUSTARD",
+            // Silver / Bronze / Copper / Metallics
+            "SLV": "SILVER", "SILVER": "SILVER",
+            "BRZ": "BRONZE", "BRONZE": "BRONZE",
+            "CPR": "COPPER", "COPR": "COPPER", "COPPER": "COPPER",
+            // Cream / Khaki / Indigo / Grape / Blush / Fig
+            "CRM": "CREAM", "CREAM": "CREAM",
+            "KHK": "KHAKI", "KHAKI": "KHAKI",
+            "IND": "INDIGO", "INDIGO": "INDIGO",
+            "GRP": "GRAPE", "GRAPE": "GRAPE",
+            "BLS": "BLUSH", "BLUSH": "BLUSH",
+            "FIG": "FIG",
+            // Mehandi (henna-green shade, common in this trade)
+            "MHD": "MEHANDI", "MYD": "MEHANDI", "MEHANDI": "MEHANDI",
+            // Onion / Mix (special buckets used by these dealers)
+            "ONION": "ONION", "MIX": "MIX", "MIXED": "MIX", "ASSORTED": "MIX"
+        };
+
+        // Expands one colour token through the abbreviation dictionary if
+        // known; otherwise returns it unchanged (so full spellings pass
+        // straight through untouched).
+        function expandOneColourWord(token) {
+            const key = token.trim().toUpperCase();
+            return COLOR_ABBREV[key] || token.trim();
+        }
+
+        // Expands a full colour value, including "/"-joined combos, e.g.
+        // "BK/RD" -> "BLACK/RED", "BRN" -> "BROWN", "Mint" -> "Mint" (unknown,
+        // left as-is).
+        function expandColourValue(value) {
+            return String(value || "")
+                .split("/")
+                .map(part => expandOneColourWord(part))
+                .join("/");
+        }
+
+        // Title-cases a word ("BLACK" -> "Black") for a friendlier display —
+        // used only when a value isn't going to be overwritten by an exact
+        // master-catalog spelling, so the catalog's own casing always wins
+        // when one is available.
+        function titleCase(value) {
+            return String(value || "").split(/([\s/])/).map(part =>
+                /[\s/]/.test(part) ? part : (part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            ).join("");
+        }
+
+        // Baseline colour expansion that runs on EVERY row, independent of
+        // whether a master article list is loaded at all. This guarantees
+        // short forms like "BK" always become "Black" even before/without
+        // catalog matching — catalog matching (when available) then refines
+        // this further, and its exact spelling/casing takes precedence.
+        function globalExpandColours(rows) {
+            rows.forEach(r => {
+                const expanded = expandColourValue(r.colour);
+                r.colour = titleCase(expanded);
+            });
+        }
+
+        // Flags a quantity of 0 (or unparseable) as a likely scan error —
+        // nobody orders zero units, so this almost always means the
+        // handwriting/number wasn't read correctly. Runs independently of
+        // whether a master article list is loaded, since it's not a catalog
+        // check — it's just basic sanity on the number itself.
+        function checkQtyValidity(rows) {
+            rows.forEach(r => {
+                r.qtyFlagReasons = [];
+                const qtyNum = parseInt(r.qty, 10);
+                if (!qtyNum || qtyNum <= 0) {
+                    r.qtyFlagReasons.push(`Quantity is "${r.qty}" — likely misread from the photo (0 or blank is almost never a real order), please check.`);
+                }
+            });
+        }
+
+        // Checks a single colour/size value against the set of values known
+        // to be valid for a matched article. Tries, in order: exact match,
+        // abbreviation-expanded match (BK -> Black), per-part combo match
+        // (BK/RD -> Black/Red, matched against individual valid entries even
+        // if the master list doesn't store that exact combo string), then
+        // fuzzy-typo match as a last resort.
+        function correctAgainstSet(value, validSet, isColourField) {
+            if (!validSet || validSet.size === 0) return { value, matched: false };
+            const trimmed = String(value || "").trim();
+            if (!trimmed) return { value, matched: false };
+
+            // 1. Exact match (case-insensitive)
+            for (const valid of validSet) {
+                if (valid.toLowerCase() === trimmed.toLowerCase()) return { value: valid, matched: true };
+            }
+
+            if (isColourField) {
+                // 2. Abbreviation-expanded exact match ("BK" -> "BLACK")
+                const expanded = expandColourValue(trimmed);
+                for (const valid of validSet) {
+                    if (valid.toLowerCase() === expanded.toLowerCase()) return { value: valid, matched: true };
+                }
+
+                // 3. Combo colours: match each "/"-separated part independently
+                // against the valid set, even if the combo itself isn't stored
+                // as one exact string in the master list.
+                if (trimmed.includes("/") || expanded.includes("/")) {
+                    const parts = expanded.split("/").map(p => p.trim());
+                    const resolvedParts = parts.map(part => {
+                        for (const valid of validSet) {
+                            if (valid.toLowerCase() === part.toLowerCase()) return valid;
+                        }
+                        // fuzzy-match this individual part too
+                        let best = null, bestDist = Infinity;
+                        for (const valid of validSet) {
+                            const dist = levenshtein(part.toUpperCase(), valid.toUpperCase());
+                            if (dist < bestDist) { bestDist = dist; best = valid; }
+                        }
+                        return (best && bestDist <= maxAllowedDistance(part.length)) ? best : null;
+                    });
+                    if (resolvedParts.every(p => p !== null)) {
+                        return { value: resolvedParts.join("/"), matched: true };
+                    }
+                }
+            }
+
+            // 4. Fuzzy match on the (possibly expanded) whole value — catches
+            // typos in full spellings too, e.g. "Broen" -> "Brown".
+            // SIZE FIELDS ARE EXCLUDED from this step: size codes are short
+            // measurement strings (6x8, 7x8, 4x8...) where a 1-character
+            // difference is a genuinely different size, not a typo. Fuzzy-
+            // matching sizes would silently "correct" an invalid size into
+            // some other valid-but-wrong size instead of flagging it.
+            if (!isColourField) {
+                return { value: trimmed, matched: false };
+            }
+            const compareValue = expandColourValue(trimmed);
+            let best = null, bestDist = Infinity;
+            for (const valid of validSet) {
+                const dist = levenshtein(compareValue.toUpperCase(), valid.toUpperCase());
+                if (dist < bestDist) { bestDist = dist; best = valid; }
+            }
+            if (best && bestDist <= maxAllowedDistance(compareValue.length)) {
+                return { value: best, matched: true };
+            }
+            return { value: trimmed, matched: false };
+        }
+
+        // Applies master-list auto-correction across a GROUP of rows that all
+        // came from the same original scanned line (e.g. "BK+PM+BR+SLT+CHPY"
+        // split into 5 rows). This matters because a store-specific shorthand
+        // like "PM" has no letters in common with "Peach" — no dictionary or
+        // fuzzy-distance rule can find that on its own. But once BK->Black,
+        // BR->Brown, and SLT->Sultan are confidently matched, we know the
+        // article's remaining valid colours (from the master list) MUST be
+        // whatever's left over — so "PM" and "CHPY" get resolved by
+        // elimination against the shrinking pool of unclaimed valid colours.
+        function applyMasterCorrectionToRows(rows) {
+            if (!masterIndex || masterIndex.size === 0) return;
+
+            const groups = new Map();
+            rows.forEach(r => {
+                const gid = r.groupId || r.id;
+                if (!groups.has(gid)) groups.set(gid, []);
+                groups.get(gid).push(r);
+                r.splitFlagReasons = r.splitFlagReasons || [];
+                r.masterFlagReasons = []; // re-derived fresh every time this runs
+                r.masterChecked = true;
+            });
+
+            const flag = (r, note) => {
+                r.masterFlagReasons.push(note);
+            };
+
+            groups.forEach(groupRows => {
+                const entry = matchArticleAgainstMaster(groupRows[0].article);
+                if (!entry) {
+                    groupRows.forEach(r => flag(r, `${r.article}: not found in master article list — please verify manually.`));
+                    return;
+                }
+                groupRows.forEach(r => { r.article = entry.original; });
+
+                // ---- Colour: confident matches first, then elimination ----
+                if (entry.colours.size > 0) {
+                    const claimed = new Set();
+                    const unresolved = [];
+
+                    groupRows.forEach(r => {
+                        const result = correctAgainstSet(r.colour, entry.colours, true);
+                        if (result.matched && !claimed.has(result.value)) {
+                            r.colour = result.value;
+                            claimed.add(result.value);
+                        } else {
+                            unresolved.push(r);
+                        }
+                    });
+
+                    let remaining = [...entry.colours].filter(c => !claimed.has(c));
+                    unresolved.forEach(r => {
+                        if (remaining.length === 0) {
+                            flag(r, `${entry.original}: colour "${r.colour}" not recognized and no valid colours left unclaimed for this line — please check manually.`);
+                            r.colour = `${r.colour} (?)`;
+                            return;
+                        }
+                        const rawFirstLetter = (r.colour || "").trim()[0]?.toUpperCase();
+                        const candidates = remaining.filter(c => c[0]?.toUpperCase() === rawFirstLetter);
+                        let pick = null;
+                        if (candidates.length === 1) {
+                            pick = candidates[0];
+                        } else if (remaining.length === 1) {
+                            pick = remaining[0];
+                        }
+                        if (pick) {
+                            const originalGuess = r.colour;
+                            r.colour = pick;
+                            claimed.add(pick);
+                            remaining = remaining.filter(c => c !== pick);
+                            flag(r, `${entry.original}: "${originalGuess}" matched to "${pick}" by elimination (last remaining valid colour for this line) — please double check.`);
+                        } else {
+                            flag(r, `${entry.original}: colour "${r.colour}" not recognized — remaining valid options for this article: ${remaining.join(", ")}.`);
+                            r.colour = `${r.colour} (?)`;
+                        }
+                    });
+                } else {
+                    // Article matched, but the catalog has no colour data at all
+                    // for it — nothing to check against, so say so instead of
+                    // silently leaving it unvalidated.
+                    groupRows.forEach(r => flag(r, `${entry.original}: no colour data in catalog for this article — colour "${r.colour}" kept as scanned, please verify manually.`));
+                }
+
+                // ---- Size: validated per-row as before (usually shared across the group) ----
+                if (entry.sizes.size > 0) {
+                    groupRows.forEach(r => {
+                        const sizeResult = correctAgainstSet(r.size, entry.sizes, false);
+                        if (sizeResult.matched) {
+                            r.size = sizeResult.value;
+                        } else {
+                            flag(r, `${entry.original}: size "${r.size}" not recognized for this article (expected one of: ${[...entry.sizes].join(", ")}).`);
+                        }
+                    });
+                } else {
+                    groupRows.forEach(r => flag(r, `${entry.original}: no size data in catalog for this article — size "${r.size}" kept as scanned, please verify manually.`));
+                }
+            });
+        }
+
+        function rematchAllRows() {
+            if (!masterIndex || masterIndex.size === 0) {
+                showToast("Upload an article list first.");
+                return;
+            }
+            if (masterRows.length === 0) {
+                showToast("No scanned rows to check yet.");
+                return;
+            }
+            globalExpandColours(masterRows);
+            checkQtyValidity(masterRows);
+            applyMasterCorrectionToRows(masterRows);
+            renderTable(masterRows);
+            showToast(`Re-checked ${masterRows.length} rows against the master list.`);
         }
 
         async function processSinglePage(fileObj, pageIndex) {
-            const base64Data = await fileToBase64(fileObj.file);
+            const activeKey = getActiveApiKey();
+            if (!activeKey) {
+                throw new Error("Missing Gemini API Key. Please enter your API key in the top settings bar.");
+            }
+
+            const base64Data = await fileToNormalizedBase64(fileObj.file);
             const topDealer = document.getElementById('topDealerInput').value.trim();
 
             const prompt = `You are an expert handwriting OCR engine for footwear order pads.
-Analyze this order form page and return a JSON object with:
+Analyze this order form page line-by-line and return a JSON object.
+
+CRITICAL INSTRUCTIONS:
 1. "pageNo": "Page ${pageIndex + 1}"
 2. "dealerName": extracted dealer name written at the top header of the pad. (If blank/unclear, use "${topDealer || 'VENUS ENTERPRISES'}")
 3. "station": extracted station or town name (or "")
-4. "items": array of item rows written on the sheet. Each item must contain:
-   - "article": article / model number
-   - "colour": list of colors (e.g., "Bk + Br + Tan" or "Bk/Red")
-   - "size": size string (e.g. "6x10", "8x10=3, 11x1=3", "5x8")
-   - "qty": raw quantity or formula (e.g., "5", "5+5+5", "3+3")`;
+4. "monthLabels": SOME order pads write month names (e.g. "JULY", "AUG", "SEP" or similar) as small column headers directly above the QTY column, meaning the numbers in that row are a dispatch schedule (one quantity per month), NOT one quantity per colour/size. Look carefully near the top of the QTY column for any such handwritten labels. If you find them, return them as an array in the order they appear left-to-right (e.g. ["July","August","September"]). If there are no such month labels visible anywhere, return an empty array [].
+5. COLUMN ORDER VARIES between pads — some list Colours before Size, others list Size before Colours. Always read the actual printed column headers on THIS page to know which is which; never assume a fixed order from memory.
+6. "items": array of item rows written on the sheet. Each item must contain:
+   - "article": article / model number. Be EXTREMELY careful with numbers. Double check 9s and 3s (e.g. 6999-04, not 6939-04).
+   - "colour": list of colors exactly as written, keep "+" or spaces between multiple colours on one line (e.g., "BK+BR+TAN" or "BK BRN TAN" or "BK/Red"). Some dealers write a generic label like "Mix" or "All" in this column and then write the ACTUAL colour breakdown as small handwritten notes directly above the quantity numbers (often in a different ink colour) — if you see this pattern, use those colour notes above the QTY column instead of the generic "Mix"/"All" label. If "monthLabels" is non-empty for this page, still write the colour(s) exactly as shown on that line — do not try to split them yourself.
+   - "size": size string exactly as written, keep multiple sizes space-separated if the line lists more than one (e.g. "6x10" or "6x9 7x10 8x10")
+   - "qty": the FULL quantity exactly as written INCLUDING every "+" sign and the "=" total if present (e.g. "5", "5+5+5=15", "3+3"). NEVER collapse this down to just the final total — the individual numbers are needed to split the row by colour, size, or month. This is the single most important field to get exactly right.
+
+STRICT FIELD SEPARATION — "colour" and "qty" must never mix content: the "colour" field must contain ONLY colour codes/names — no digits, no "+" signs. The "qty" field must contain ONLY numbers, "+" signs, and "=" — no letters. On messy handwritten lines (colour notes squeezed in above the quantity numbers, corrections, cross-outs, different pen colours overlapping), it can be tempting to accidentally pull a stray digit into the colour field or a stray letter into the qty field — do not do this. Read the colour labels and the quantity digits as two completely separate pieces of information, even when they are physically close together or overlapping on the page, and place each into its correct field only.
+
+TICK MARKS / CHECKMARKS (✓) ARE NOT DIGITS: Some dealers mark a quantity number with a small tick or checkmark (often in red ink) to show it's been verified/counted. This tick is NOT part of the number and must NEVER be read as a "1", "2", part of the number's shape, or an extra addend — it is purely a verification mark and should be ignored completely when reading the quantity.
+
+CROSS-OUTS / CORRECTIONS: If a number is struck through and a different number is written next to or above it, use ONLY the corrected (final) number — the struck-through one was replaced and should not appear in your output at all.
+
+DITTO MARKS (",", ",,", "-do-", "-||-", """, "11", "/ /", "Do"): 
+If you see ANY ditto mark or quotation mark signifying "same as above" in ANY column (Article, Colour, or Size), you MUST copy the exact value from the row immediately above it. Do NOT output the ditto mark itself.`;
 
             const payload = {
                 contents: [{
                     role: "user",
                     parts: [
                         { text: prompt },
-                        { inlineData: { mimeType: fileObj.file.type || "image/png", data: base64Data } }
+                        { inlineData: { mimeType: "image/jpeg", data: base64Data } }
                     ]
                 }],
                 generationConfig: {
@@ -331,6 +1254,7 @@ Analyze this order form page and return a JSON object with:
                             pageNo: { type: "STRING" },
                             dealerName: { type: "STRING" },
                             station: { type: "STRING" },
+                            monthLabels: { type: "ARRAY", items: { type: "STRING" } },
                             items: {
                                 type: "ARRAY",
                                 items: {
@@ -350,69 +1274,27 @@ Analyze this order form page and return a JSON object with:
                 }
             };
 
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const result = await fetchWithBackoff(endpoint, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-
+            const result = await callGeminiApiWithFallback(payload, activeKey);
             const contentText = result.candidates?.[0]?.content?.parts?.[0]?.text;
             if (!contentText) return [];
 
             const parsed = JSON.parse(contentText);
-            const extracted = [];
             const effectiveDealer = parsed.dealerName && parsed.dealerName !== "Unknown Dealer" ? parsed.dealerName : (topDealer || "VENUS ENTERPRISES");
+            const pageLabel = parsed.pageNo || `Page ${pageIndex + 1}`;
+            const station = parsed.station || "-";
+            const detectedMonthLabels = Array.isArray(parsed.monthLabels) ? parsed.monthLabels.filter(Boolean) : [];
 
-            // Update top header if first page detects a clean dealer name
-            if (pageIndex === 0 && parsed.dealerName) {
+            if (pageIndex === 0 && parsed.dealerName && parsed.dealerName !== "Unknown Dealer") {
                 document.getElementById('topDealerInput').value = effectiveDealer;
                 document.getElementById('kpiDealerName').innerText = effectiveDealer;
             }
 
-            (parsed.items || []).forEach(item => {
-                let qtyStr = (item.qty || "0").toString().replace(/=/g, '').trim();
-                let quants = qtyStr.split('+').map(q => q.trim()).filter(q => q && !isNaN(q));
-                let colors = (item.colour || "-").split('+').map(c => c.trim());
+            const splitMode = getSplitMode();
+            const manualMonthLabels = getMonthLabels();
 
-                if (quants.length > 1 && colors.length > 1 && quants.length === colors.length) {
-                    quants.forEach((q, idx) => {
-                        extracted.push({
-                            id: crypto.randomUUID(),
-                            page: parsed.pageNo || `Page ${pageIndex + 1}`,
-                            dealer: effectiveDealer,
-                            station: parsed.station || "-",
-                            article: item.article || "-",
-                            colour: colors[idx] || item.colour,
-                            size: item.size || "-",
-                            qty: parseInt(q, 10) || 0
-                        });
-                    });
-                } else if (quants.length > 1) {
-                    quants.forEach(q => {
-                        extracted.push({
-                            id: crypto.randomUUID(),
-                            page: parsed.pageNo || `Page ${pageIndex + 1}`,
-                            dealer: effectiveDealer,
-                            station: parsed.station || "-",
-                            article: item.article || "-",
-                            colour: item.colour || "-",
-                            size: item.size || "-",
-                            qty: parseInt(q, 10) || 0
-                        });
-                    });
-                } else {
-                    extracted.push({
-                        id: crypto.randomUUID(),
-                        page: parsed.pageNo || `Page ${pageIndex + 1}`,
-                        dealer: effectiveDealer,
-                        station: parsed.station || "-",
-                        article: item.article || "-",
-                        colour: item.colour || "-",
-                        size: item.size || "-",
-                        qty: parseInt(qtyStr, 10) || 0
-                    });
-                }
+            const extracted = [];
+            (parsed.items || []).forEach(item => {
+                extracted.push(...splitItem(item, pageLabel, effectiveDealer, station, splitMode, manualMonthLabels, detectedMonthLabels));
             });
 
             return extracted;
@@ -420,6 +1302,13 @@ Analyze this order form page and return a JSON object with:
 
         async function startBatchScan() {
             if (uploadedFiles.length === 0) return;
+
+            const activeKey = getActiveApiKey();
+            if (!activeKey) {
+                showToast("Please enter your API Key first!");
+                document.getElementById('progressText').innerHTML = "<span class='text-red-400 font-bold'>Error: Missing Gemini API Key. Paste it in the top bar.</span>";
+                return;
+            }
 
             const btn = document.getElementById('btnStartScan');
             const progress = document.getElementById('progressText');
@@ -429,28 +1318,47 @@ Analyze this order form page and return a JSON object with:
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing AI Batch...`;
             badgeStatus.innerText = 'Scanning...';
             badgeStatus.className = 'font-bold text-amber-400';
+            progress.innerHTML = `<span class='text-amber-400'>Initializing scan sequence...</span>`;
 
             masterRows = [];
             renderTable([]);
 
+            let successPages = 0;
+
             for (let i = 0; i < uploadedFiles.length; i++) {
-                progress.innerText = `Scanning page ${i + 1} of ${uploadedFiles.length}...`;
+                progress.innerHTML = `<span class='text-sky-400'>Scanning page ${i + 1} of ${uploadedFiles.length}... (Compressing image)</span>`;
                 try {
                     const rows = await processSinglePage(uploadedFiles[i], i);
+                    globalExpandColours(rows); // always spell out short forms, even with no catalog loaded
+                    checkQtyValidity(rows); // always flag 0/blank quantities as likely scan errors
+                    if (masterIndex && masterIndex.size > 0) {
+                        applyMasterCorrectionToRows(rows); // catalog match refines/validates on top
+                    }
                     masterRows.push(...rows);
                     renderTable(masterRows);
                     updateStats();
+                    successPages++;
+                    progress.innerHTML = `<span class='text-emerald-400'>Page ${i + 1} completed successfully.</span>`;
                 } catch (err) {
                     console.error("Extraction error on page", i + 1, err);
+                    progress.innerHTML = `<span class='text-red-400 font-bold'>Error Page ${i + 1}: ${err.message}</span>`;
+                    showToast(`Error on Page ${i + 1}: ${err.message}`);
+                    await new Promise(r => setTimeout(r, 2000));
                 }
             }
 
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-bolt"></i> Start Batch AI Extraction`;
-            progress.innerText = `Batch Extraction Completed!`;
-            badgeStatus.innerText = 'Completed';
-            badgeStatus.className = 'font-bold text-emerald-400';
-            showToast(`Extraction complete! Total ${masterRows.length} rows processed.`);
+            
+            if (masterRows.length > 0) {
+                progress.innerHTML = `<span class='text-emerald-400 font-bold'>Completed ${successPages}/${uploadedFiles.length} pages successfully!</span>`;
+                badgeStatus.innerText = 'Completed';
+                badgeStatus.className = 'font-bold text-emerald-400';
+                showToast(`Extraction complete! Extracted ${masterRows.length} rows.`);
+            } else {
+                badgeStatus.innerText = 'Failed';
+                badgeStatus.className = 'font-bold text-red-400';
+            }
         }
 
         function renderTable(rows) {
@@ -462,7 +1370,7 @@ Analyze this order form page and return a JSON object with:
                     <tr>
                         <td colspan="8" class="text-center py-12 text-slate-500">
                             <i class="fa-solid fa-folder-open text-3xl mb-2 block"></i>
-                            No data extracted yet. Upload pages and start scan.
+                            No data extracted yet. Upload pages and click Start Scan.
                         </td>
                     </tr>
                 `;
@@ -470,16 +1378,34 @@ Analyze this order form page and return a JSON object with:
             }
 
             rows.forEach((row) => {
+                const reasons = [...(row.splitFlagReasons || []), ...(row.masterFlagReasons || []), ...(row.qtyFlagReasons || [])];
+                const isFlagged = reasons.length > 0;
+                const isClean = !isFlagged && row.masterChecked;
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-700/40 transition";
+                tr.className = isFlagged
+                    ? "hover:bg-amber-900/30 transition bg-amber-950/40 border-l-2 border-amber-500"
+                    : "hover:bg-slate-700/40 transition";
+                const escapedReasons = reasons.map(r => r.replace(/'/g, "&#39;").replace(/"/g, "&quot;"));
+                const flagIcon = isFlagged
+                    ? `<button type="button" onclick="toggleRowFlag(event, '${row.id}')" class="relative inline-block mr-1 align-middle">
+                         <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+                       </button>`
+                    : (isClean
+                        ? `<i class="fa-solid fa-circle-check text-emerald-400 mr-1 align-middle" title="Checked against article list — colour and size confirmed valid"></i>`
+                        : "");
+                const flagDropdown = isFlagged
+                    ? `<div id="flagbox-${row.id}" class="hidden absolute z-30 bg-slate-950 border border-amber-500 text-amber-100 text-[11px] rounded-lg p-3 mt-1 w-72 shadow-2xl leading-snug">
+                         ${escapedReasons.map(r => `<div class="mb-1.5 last:mb-0">&bull; ${r}</div>`).join('')}
+                       </div>`
+                    : "";
                 tr.innerHTML = `
-                    <td class="py-2.5 px-4 font-semibold text-indigo-400">${row.page}</td>
-                    <td class="py-2.5 px-4 text-slate-100 font-bold">${row.dealer}</td>
-                    <td class="py-2.5 px-4 text-slate-400">${row.station}</td>
-                    <td class="py-2.5 px-4 font-bold text-white">${row.article}</td>
-                    <td class="py-2.5 px-4"><span class="bg-indigo-950 text-indigo-300 border border-indigo-700/50 px-2 py-0.5 rounded font-mono text-[11px]">${row.colour}</span></td>
-                    <td class="py-2.5 px-4 text-slate-300">${row.size}</td>
-                    <td class="py-2.5 px-4 text-right font-bold text-emerald-400">${row.qty}</td>
+                    <td class="py-2.5 px-4 font-semibold text-indigo-400 relative">${flagIcon}${flagDropdown}${row.page}</td>
+                    <td class="py-2 px-3"><input type="text" value="${row.month || ''}" onchange="updateCell('${row.id}', 'month', this.value)" class="bg-transparent hover:bg-slate-900 focus:bg-slate-900 border border-transparent focus:border-indigo-500 rounded px-1.5 py-0.5 text-amber-300 w-full focus:outline-none"></td>
+                    <td class="py-2 px-3"><input type="text" value="${row.station}" onchange="updateCell('${row.id}', 'station', this.value)" class="bg-transparent hover:bg-slate-900 focus:bg-slate-900 border border-transparent focus:border-indigo-500 rounded px-1.5 py-0.5 text-slate-400 w-full focus:outline-none"></td>
+                    <td class="py-2 px-3"><input type="text" value="${row.article}" onchange="updateCell('${row.id}', 'article', this.value)" class="bg-transparent hover:bg-slate-900 focus:bg-slate-900 border border-transparent focus:border-indigo-500 rounded px-1.5 py-0.5 text-white font-bold w-full focus:outline-none"></td>
+                    <td class="py-2 px-3"><input type="text" value="${row.colour}" onchange="updateCell('${row.id}', 'colour', this.value)" class="bg-indigo-950 text-indigo-300 border border-indigo-700/50 rounded px-2 py-0.5 font-mono text-[11px] w-full focus:outline-none"></td>
+                    <td class="py-2 px-3"><input type="text" value="${row.size}" onchange="updateCell('${row.id}', 'size', this.value)" class="bg-transparent hover:bg-slate-900 focus:bg-slate-900 border border-transparent focus:border-indigo-500 rounded px-1.5 py-0.5 text-slate-300 w-full focus:outline-none"></td>
+                    <td class="py-2 px-3 text-right"><input type="number" value="${row.qty}" onchange="updateCell('${row.id}', 'qty', parseInt(this.value,10)||0)" class="bg-transparent hover:bg-slate-900 focus:bg-slate-900 border border-transparent focus:border-emerald-500 rounded px-1.5 py-0.5 text-right font-bold text-emerald-400 w-16 focus:outline-none"></td>
                     <td class="py-2.5 px-4 text-center">
                         <button onclick="deleteRow('${row.id}')" class="text-slate-500 hover:text-red-400 transition p-1">
                             <i class="fa-solid fa-trash-can"></i>
@@ -489,6 +1415,61 @@ Analyze this order form page and return a JSON object with:
                 tbody.appendChild(tr);
             });
 
+            updateStats();
+        }
+
+        function updateCell(id, field, value) {
+            const item = masterRows.find(r => r.id === id);
+            if (!item) return;
+
+            if (field === 'article') {
+                const oldKey = normalizeCode(item.article);
+                item.article = value;
+                // If this correction matches an entry in the master list,
+                // use ITS exact spelling/casing as the canonical form —
+                // otherwise use whatever was just typed.
+                const matched = masterIndex && masterIndex.size > 0 ? matchArticleAgainstMaster(value) : null;
+                const canonical = matched ? matched.original : value;
+                item.article = canonical;
+
+                // Propagate to every other row that's the SAME underlying
+                // article (even if it was scanned with different casing or
+                // punctuation) — fixing one instance fixes all of them.
+                let propagatedCount = 0;
+                if (oldKey) {
+                    masterRows.forEach(r => {
+                        if (r.id !== id && normalizeCode(r.article) === oldKey) {
+                            r.article = canonical;
+                            propagatedCount++;
+                        }
+                    });
+                }
+                if (propagatedCount > 0) {
+                    showToast(`Also updated ${propagatedCount} other row(s) with the same article.`);
+                }
+            } else {
+                item[field] = value;
+            }
+
+            if (field === 'qty') {
+                checkQtyValidity([item]);
+                renderTable(masterRows);
+            } else if (field === 'article') {
+                if (masterIndex && masterIndex.size > 0) {
+                    const key = normalizeCode(item.article);
+                    const affectedRows = masterRows.filter(r => normalizeCode(r.article) === key);
+                    applyMasterCorrectionToRows(affectedRows);
+                }
+                renderTable(masterRows);
+            } else if (['colour', 'size'].includes(field) && masterIndex && masterIndex.size > 0) {
+                // Re-check just this row's group live, so fixing it by hand
+                // clears the highlight immediately instead of waiting for a
+                // full "Re-check All Rows" pass.
+                const gid = item.groupId || item.id;
+                const groupRows = masterRows.filter(r => (r.groupId || r.id) === gid);
+                applyMasterCorrectionToRows(groupRows);
+                renderTable(masterRows);
+            }
             updateStats();
         }
 
@@ -503,10 +1484,71 @@ Analyze this order form page and return a JSON object with:
             const filtered = masterRows.filter(r => 
                 r.article.toLowerCase().includes(query) ||
                 r.colour.toLowerCase().includes(query) ||
-                r.dealer.toLowerCase().includes(query) ||
                 r.page.toLowerCase().includes(query)
             );
             renderTable(filtered);
+        }
+
+        // Find & Replace across the whole table — for fixing a scan mistake
+        // (like a mis-read colour code or article number) everywhere it
+        // appears in one go, instead of editing each row by hand.
+        function findReplaceAll() {
+            const field = document.getElementById('frField').value;
+            const findVal = document.getElementById('frFind').value;
+            const replaceVal = document.getElementById('frReplace').value;
+            const exactOnly = document.getElementById('frExact').checked;
+
+            if (!findVal) {
+                showToast("Type something in the Find box first.");
+                return;
+            }
+            if (masterRows.length === 0) {
+                showToast("No data to search yet — scan some pages first.");
+                return;
+            }
+
+            const fieldsToCheck = field === 'all'
+                ? ['article', 'colour', 'size', 'station']
+                : [field];
+
+            const findLower = findVal.toLowerCase();
+            let matchCount = 0;
+            let rowsTouched = 0;
+
+            masterRows.forEach(row => {
+                let touched = false;
+                fieldsToCheck.forEach(f => {
+                    const current = String(row[f] ?? "");
+                    if (exactOnly) {
+                        if (current.trim().toLowerCase() === findLower) {
+                            row[f] = replaceVal;
+                            matchCount++;
+                            touched = true;
+                        }
+                    } else {
+                        if (current.toLowerCase().includes(findLower)) {
+                            // Case-insensitive global replace, preserving surrounding text
+                            const re = new RegExp(findVal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                            const before = current;
+                            row[f] = current.replace(re, replaceVal);
+                            if (row[f] !== before) {
+                                matchCount++;
+                                touched = true;
+                            }
+                        }
+                    }
+                });
+                if (touched) rowsTouched++;
+            });
+
+            renderTable(masterRows);
+            filterTable();
+
+            if (matchCount === 0) {
+                showToast(`No matches found for "${findVal}".`);
+            } else {
+                showToast(`Replaced "${findVal}" → "${replaceVal}" in ${rowsTouched} row(s), ${matchCount} field(s) updated.`);
+            }
         }
 
         function downloadExcel() {
@@ -515,31 +1557,22 @@ Analyze this order form page and return a JSON object with:
                 return;
             }
 
-            const excelData = masterRows.map(r => ({
-                "PAGE NO.": r.page,
-                "DEALER NAME": r.dealer,
-                "STATION": r.station,
-                "ARTICLE NO.": r.article,
-                "COLOUR": r.colour,
-                "SIZE": r.size,
-                "QTY": r.qty
-            }));
-
+            const dealerName = document.getElementById('topDealerInput').value.trim() || "-";
             const total = masterRows.reduce((acc, r) => acc + (parseInt(r.qty, 10) || 0), 0);
-            excelData.push({
-                "PAGE NO.": "",
-                "DEALER NAME": "",
-                "STATION": "",
-                "ARTICLE NO.": "",
-                "COLOUR": "",
-                "SIZE": "GRAND TOTAL",
-                "QTY": total
-            });
 
-            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const aoa = [];
+            aoa.push(["DEALER:", dealerName]);
+            aoa.push([]);
+            aoa.push(["PAGE NO.", "MONTH", "STATION", "ARTICLE NO.", "COLOUR", "SIZE", "QTY"]);
+            masterRows.forEach(r => {
+                aoa.push([r.page, r.month || "", r.station, r.article, r.colour, r.size, r.qty]);
+            });
+            aoa.push(["", "", "", "", "", "GRAND TOTAL", total]);
+
+            const worksheet = XLSX.utils.aoa_to_sheet(aoa);
             worksheet['!cols'] = [
                 { wch: 12 },
-                { wch: 25 },
+                { wch: 10 },
                 { wch: 18 },
                 { wch: 18 },
                 { wch: 22 },
@@ -555,7 +1588,7 @@ Analyze this order form page and return a JSON object with:
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            const topDealerName = document.getElementById('topDealerInput').value.trim().replace(/[^a-zA-Z0-9]/g, '_') || 'Dealer';
+            const topDealerName = dealerName.replace(/[^a-zA-Z0-9]/g, '_') || 'Dealer';
             a.download = `${topDealerName}_Extracted_Orders_${new Date().toISOString().slice(0,10)}.xlsx`;
             document.body.appendChild(a);
             a.click();
@@ -566,5 +1599,3 @@ Analyze this order form page and return a JSON object with:
     </script>
 </body>
 </html>
-
-
