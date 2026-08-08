@@ -110,7 +110,10 @@
                 <span class="text-slate-500 uppercase tracking-wide">Rows / लाइनें:</span>
                 <span class="font-bold text-slate-200" id="statRowsCount">0</span>
             </div>
-            <div class="flex items-center gap-2 ml-auto">
+            <button onclick="resplitAllRows()" title="Re-apply the latest colour/size/quantity splitting rules to rows already in the table" class="ml-auto sm:ml-0 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium px-3 py-1.5 rounded-lg shadow transition text-xs flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fa-solid fa-scissors"></i> Fix Splitting / फिर से अलग करें
+            </button>
+            <div class="flex items-center gap-2 sm:ml-auto">
                 <span class="text-slate-500 uppercase tracking-wide">Grand Total / कुल:</span>
                 <span class="font-black text-emerald-400 text-base" id="statTotalQty">0</span>
             </div>
@@ -1208,6 +1211,36 @@
             applyMasterCorrectionToRows(masterRows);
             renderTable(masterRows);
             showToast(`Re-checked ${masterRows.length} rows against the master list.`);
+        }
+
+        // Retroactively re-runs the colour/size/qty split logic on rows
+        // ALREADY in the table — so improvements to the splitting rules
+        // apply to existing scanned data too, without needing to re-upload
+        // and re-scan the original photos.
+        function resplitAllRows() {
+            if (masterRows.length === 0) {
+                showToast("No scanned rows to split yet.");
+                return;
+            }
+            const before = masterRows.length;
+            const rebuilt = [];
+            masterRows.forEach(r => {
+                const fakeItem = { article: r.article, colour: r.colour, size: r.size, qty: String(r.qty) };
+                const split = splitItem(fakeItem, r.page, r.dealer, r.station, 'colour', [], []);
+                split.forEach(nr => { nr.month = r.month || ""; });
+                rebuilt.push(...split);
+            });
+            masterRows = rebuilt;
+            globalExpandColours(masterRows);
+            checkQtyValidity(masterRows);
+            if (masterIndex && masterIndex.size > 0) {
+                applyMasterCorrectionToRows(masterRows);
+            }
+            renderTable(masterRows);
+            const after = masterRows.length;
+            showToast(after > before
+                ? `Split ${before} row(s) into ${after} — ${after - before} new row(s) created.`
+                : `Checked ${before} row(s) — nothing more to split.`);
         }
 
         async function processSinglePage(fileObj, pageIndex) {
