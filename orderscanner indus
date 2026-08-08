@@ -132,7 +132,7 @@
             <div class="flex flex-col sm:flex-row gap-3 items-stretch mt-4">
                 <button onclick="startBatchScan()" id="btnStartScan" disabled class="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-sm">
                     <i class="fa-solid fa-bolt"></i>
-                    <span>Start Scanning / स्कैन शुरू करें (<span id="badgeFileCount">0</span>)</span>
+                    <span>Start Scanning / स्कैन शुरू करें</span>
                 </button>
                 <span id="badgeStatus" class="self-center text-xs font-bold text-slate-400 whitespace-nowrap px-2">Idle</span>
             </div>
@@ -335,7 +335,7 @@
 
         document.getElementById('topDealerInput').addEventListener('input', function(e) {
             const val = e.target.value.trim() || 'UNKNOWN DEALER';
-            document.getElementById('kpiDealerName').innerText = val;
+            setText('kpiDealerName', val);
         });
 
         function toggleHowTo() {
@@ -426,20 +426,27 @@
             updateStats();
             document.getElementById('btnStartScan').disabled = true;
             document.getElementById('imageInput').value = '';
-            document.getElementById('badgeStatus').innerText = 'Idle';
+            setText('badgeStatus', 'Idle');
             document.getElementById('badgeStatus').className = 'font-bold text-slate-400';
             document.getElementById('progressText').innerHTML = '';
             showToast("Cleared all files and table data.");
         }
 
+        // Sets .innerText on an element only if it actually exists — a
+        // missing element (removed, mistyped id, wiped out by an innerHTML
+        // replace elsewhere) should never crash an in-progress scan.
+        function setText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.innerText = text;
+        }
+
         function updateStats() {
-            document.getElementById('statFilesCount').innerText = `${uploadedFiles.length} Pages`;
-            document.getElementById('badgeFileCount').innerText = uploadedFiles.length;
-            document.getElementById('statRowsCount').innerText = `${masterRows.length} Rows`;
+            setText('statFilesCount', `${uploadedFiles.length} Pages`);
+            setText('statRowsCount', `${masterRows.length} Rows`);
             const total = masterRows.reduce((acc, r) => acc + (parseInt(r.qty, 10) || 0), 0);
-            document.getElementById('statTotalQty').innerText = `${total.toLocaleString()} Pairs`;
-            document.getElementById('footGrandTotal').innerText = total.toLocaleString();
-            document.getElementById('visibleBadge').innerText = `${masterRows.length} rows`;
+            setText('statTotalQty', `${total.toLocaleString()} Pairs`);
+            setText('footGrandTotal', total.toLocaleString());
+            setText('visibleBadge', `${masterRows.length} rows`);
         }
 
         // AGGRESSIVE COMPRESSION: Resizes images heavily to ensure payload is tiny and won't trigger network timeouts.
@@ -1326,7 +1333,7 @@ If you see ANY ditto mark or quotation mark signifying "same as above" in ANY co
 
             if (pageIndex === 0 && parsed.dealerName && parsed.dealerName !== "Unknown Dealer") {
                 document.getElementById('topDealerInput').value = effectiveDealer;
-                document.getElementById('kpiDealerName').innerText = effectiveDealer;
+                setText('kpiDealerName', effectiveDealer);
             }
 
             const splitMode = getSplitMode();
@@ -1356,7 +1363,7 @@ If you see ANY ditto mark or quotation mark signifying "same as above" in ANY co
 
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing AI Batch...`;
-            badgeStatus.innerText = 'Scanning...';
+            setText('badgeStatus', 'Scanning...');
             badgeStatus.className = 'font-bold text-amber-400';
             progress.innerHTML = `<span class='text-amber-400'>Initializing scan sequence...</span>`;
 
@@ -1392,11 +1399,11 @@ If you see ANY ditto mark or quotation mark signifying "same as above" in ANY co
             
             if (masterRows.length > 0) {
                 progress.innerHTML = `<span class='text-emerald-400 font-bold'>Completed ${successPages}/${uploadedFiles.length} pages successfully!</span>`;
-                badgeStatus.innerText = 'Completed';
+                setText('badgeStatus', 'Completed');
                 badgeStatus.className = 'font-bold text-emerald-400';
                 showToast(`Extraction complete! Extracted ${masterRows.length} rows.`);
             } else {
-                badgeStatus.innerText = 'Failed';
+                setText('badgeStatus', 'Failed');
                 badgeStatus.className = 'font-bold text-red-400';
             }
         }
