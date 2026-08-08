@@ -610,9 +610,12 @@
         // several sizes for a single colour. The dash here is a separator
         // between two size codes, NOT part of either size — "5x8-6x8" means
         // two sizes, "5x8" and "6x8", never one combined size value.
+        // Covers every common dash character (plain hyphen, en dash, em
+        // dash, minus sign) since AI vision output doesn't always use a
+        // plain ASCII hyphen even when a handwritten dash is meant.
         function sizeTokens(val) {
             if (!val) return [];
-            return String(val).split(/[\s,\-]+/).map(s => s.trim()).filter(Boolean);
+            return String(val).split(/[\s,\-\u2010\u2011\u2012\u2013\u2014\u2212]+/).map(s => s.trim()).filter(Boolean);
         }
 
         // Splits the individual addend numbers out of a qty string like
